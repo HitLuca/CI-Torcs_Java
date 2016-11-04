@@ -10,14 +10,13 @@ import cicontest.torcs.genome.IGenome;
 import scr.Action;
 import scr.SensorModel;
 
-public class DefaultDriver extends AbstractDriver {
+public class FuocoDriver extends AbstractDriver {
 
-    private NeuralNetwork neuralNetwork;
+    private Core core = new Core();
+    private Action action = new Action();
 
-    public DefaultDriver() {
+    public FuocoDriver() {
         initialize();
-        neuralNetwork = new NeuralNetwork(12, 8, 2);
-//        neuralNetwork = neuralNetwork.loadGenome();
     }
 
     private void initialize() {
@@ -29,29 +28,22 @@ public class DefaultDriver extends AbstractDriver {
 
     @Override
     public void loadGenome(IGenome genome) {
-        if (genome instanceof DefaultDriverGenome) {
-            DefaultDriverGenome myGenome = (DefaultDriverGenome) genome;
-        } else {
-            System.err.println("Invalid Genome assigned");
-        }
+        this.core.loadGenome(genome);
     }
 
     @Override
     public double getAcceleration(SensorModel sensors) {
-        double[] sensorArray = new double[4];
-        double output = neuralNetwork.getOutput(sensors);
-        return 1;
+        return action.accelerate;
     }
 
     @Override
     public double getSteering(SensorModel sensors) {
-        Double output = neuralNetwork.getOutput(sensors);
-        return 0.5;
+        return action.steering;
     }
 
     @Override
     public String getDriverName() {
-        return "Example Controller";
+        return "Fuoco";
     }
 
     @Override
@@ -74,34 +66,39 @@ public class DefaultDriver extends AbstractDriver {
 
     @Override
     public Action defaultControl(Action action, SensorModel sensors) {
-        if (action == null) {
-            action = new Action();
-        }
-        action.steering = DriversUtils.alignToTrackAxis(sensors, 0.5);
-        if (sensors.getSpeed() > 60.0D) {
-            action.accelerate = 0.0D;
-            action.brake = 0.0D;
-        }
+//        if (action == null) {
+//            action = new Action();
+//        }
+//        action.steering = DriversUtils.alignToTrackAxis(sensors, 0.5);
+//        if (sensors.getSpeed() > 60.0D) {
+//            action.accelerate = 0.0D;
+//            action.brake = 0.0D;
+//        }
+//
+//        if (sensors.getSpeed() > 70.0D) {
+//            action.accelerate = 0.0D;
+//            action.brake = -1.0D;
+//        }
+//
+//        if (sensors.getSpeed() <= 60.0D) {
+//            action.accelerate = (80.0D - sensors.getSpeed()) / 80.0D;
+//            action.brake = 0.0D;
+//        }
+//
+//        if (sensors.getSpeed() < 30.0D) {
+//            action.accelerate = 1.0D;
+//            action.brake = 0.0D;
+//        }
 
-        if (sensors.getSpeed() > 70.0D) {
-            action.accelerate = 0.0D;
-            action.brake = -1.0D;
-        }
+        action = this.core.computeAction(sensors);
 
-        if (sensors.getSpeed() <= 60.0D) {
-            action.accelerate = (80.0D - sensors.getSpeed()) / 80.0D;
-            action.brake = 0.0D;
-        }
-
-        if (sensors.getSpeed() < 30.0D) {
-            action.accelerate = 1.0D;
-            action.brake = 0.0D;
-        }
         System.out.println("--------------" + getDriverName() + "--------------");
         System.out.println("Steering: " + action.steering);
         System.out.println("Acceleration: " + action.accelerate);
         System.out.println("Brake: " + action.brake);
         System.out.println("-----------------------------------------------");
+
+
         return action;
     }
 }
