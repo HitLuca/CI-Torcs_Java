@@ -1,4 +1,4 @@
 Manifest-Version: 1.0
-Main-Class: DefaultDriverAlgorithm
-Driver: DefaultDriver
+Main-Class: template.DefaultDriverAlgorithm
+Driver: template.DefaultDriver
 

@@ -1,3 +1,5 @@
+package template;
+
 import scr.SensorModel;
 
 import java.io.*;

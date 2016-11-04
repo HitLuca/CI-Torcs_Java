@@ -1,10 +1,10 @@
+package template;
+
 import java.io.File;
 
 import cicontest.algorithm.abstracts.AbstractAlgorithm;
-import cicontest.algorithm.abstracts.AbstractRace;
 import cicontest.algorithm.abstracts.DriversUtils;
 import cicontest.torcs.controller.Driver;
-import cicontest.torcs.controller.Human;
 import race.TorcsConfiguration;
 
 public class DefaultDriverAlgorithm extends AbstractAlgorithm {

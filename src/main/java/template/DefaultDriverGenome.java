@@ -1,3 +1,4 @@
+package template;
 
 import cicontest.torcs.genome.IGenome;
 
