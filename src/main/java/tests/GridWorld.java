@@ -108,7 +108,6 @@ public class GridWorld {
     private static double[] makeMove(double[] state, Action action) {
         switch (action) {
             case TOP:
-
                 break;
             case RIGHT:
                 break;

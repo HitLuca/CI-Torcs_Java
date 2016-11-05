@@ -53,13 +53,14 @@ public class TrainFuocoCore {
 
         DataSet train_set = iterator.next();
 
-        int iterations = 20;
+        int iterations = 100;
 
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
             .seed(12165115614545L)
             .iterations(iterations)
             .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
             .weightInit(WeightInit.XAVIER)
+            .updater(Updater.SGD).momentum(0.9)
             .list()
             .layer(0, new DenseLayer.Builder()
                 .nIn(22)

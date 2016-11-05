@@ -40,7 +40,7 @@ public class FuocoDriverAlgorithm implements Serializable {
         drivers[0] = genome;
 
         FuocoRace race = new FuocoRace();
-        race.setTrack("alpine-1", "road");
+        race.setTrack(track, road);
         race.laps = laps;
 
         int[] results = new int[1];
