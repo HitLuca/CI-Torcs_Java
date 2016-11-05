@@ -1,6 +1,8 @@
 package fuoco;
 
 
+import cicontest.algorithm.abstracts.DriversUtils;
+import cicontest.torcs.genome.IGenome;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
@@ -21,6 +23,7 @@ import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.SplitTestAndTrain;
@@ -28,6 +31,7 @@ import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization;
 import org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
+import org.omg.CORBA.portable.OutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +63,7 @@ public class TrainFuocoCore {
 
         DataSet train_set = iterator.next();
 
-        int iterations = 50;
+        int iterations = 1;
 
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
             .seed(12165115614545L)
@@ -92,5 +96,8 @@ public class TrainFuocoCore {
         net.setListeners(new ScoreIterationListener(1));
         net.fit(train_set);
 
+        FuocoCoreGenome g = new FuocoCoreGenome(net);
+        DriversUtils.registerMemory(FuocoDriver.class);
+        DriversUtils.storeGenome(g, save);
     }
 }
