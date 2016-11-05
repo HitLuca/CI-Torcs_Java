@@ -1,4 +1,4 @@
 Manifest-Version: 1.0
-Main-Class: template.DefaultDriverAlgorithm
-Driver: template.FuocoDriver
+Main-Class: fuoco.FuocoDriverAlgorithm
+Driver: fuoco.FuocoDriver
 

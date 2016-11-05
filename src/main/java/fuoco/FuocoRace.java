@@ -1,10 +1,11 @@
-package template;
+package fuoco;
 
 import cicontest.algorithm.abstracts.AbstractRace;
+import cicontest.torcs.genome.IGenome;
 
 public class FuocoRace extends AbstractRace {
 	
-	public int[] runRace(FuocoDriverGenome[] drivers, boolean withGUI){
+	public int[] runRace(IGenome[] drivers, boolean withGUI){
 		int size = Math.min(10, drivers.length);
 		FuocoDriver[] driversList = new FuocoDriver[size];
 		for(int i=0; i<size; i++){
@@ -13,6 +14,4 @@ public class FuocoRace extends AbstractRace {
 		}
 		return runRace(driversList, withGUI, true);
 	}
-
-
 }

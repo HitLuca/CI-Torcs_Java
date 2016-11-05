@@ -1,7 +1,6 @@
-package template;
+package fuoco;
 
 import cicontest.algorithm.abstracts.AbstractDriver;
-import cicontest.algorithm.abstracts.DriversUtils;
 import cicontest.torcs.controller.extras.ABS;
 import cicontest.torcs.controller.extras.AutomatedClutch;
 import cicontest.torcs.controller.extras.AutomatedGearbox;
@@ -12,14 +11,10 @@ import scr.SensorModel;
 
 public class FuocoDriver extends AbstractDriver {
 
-    private Core core = new Core();
+    private Core core;
     private Action action = new Action();
 
     public FuocoDriver() {
-        initialize();
-    }
-
-    private void initialize() {
         this.enableExtras(new AutomatedClutch());
         this.enableExtras(new AutomatedGearbox());
         this.enableExtras(new AutomatedRecovering());
@@ -28,7 +23,13 @@ public class FuocoDriver extends AbstractDriver {
 
     @Override
     public void loadGenome(IGenome genome) {
-        this.core.loadGenome(genome);
+        if (genome instanceof FuocoCoreGenome) {
+            core = new FuocoCore();
+        } else {
+            core = new DefaultCore();
+        }
+
+        core.loadGenome(genome);
     }
 
     @Override
@@ -66,29 +67,6 @@ public class FuocoDriver extends AbstractDriver {
 
     @Override
     public Action defaultControl(Action action, SensorModel sensors) {
-//        if (action == null) {
-//            action = new Action();
-//        }
-//        action.steering = DriversUtils.alignToTrackAxis(sensors, 0.5);
-//        if (sensors.getSpeed() > 60.0D) {
-//            action.accelerate = 0.0D;
-//            action.brake = 0.0D;
-//        }
-//
-//        if (sensors.getSpeed() > 70.0D) {
-//            action.accelerate = 0.0D;
-//            action.brake = -1.0D;
-//        }
-//
-//        if (sensors.getSpeed() <= 60.0D) {
-//            action.accelerate = (80.0D - sensors.getSpeed()) / 80.0D;
-//            action.brake = 0.0D;
-//        }
-//
-//        if (sensors.getSpeed() < 30.0D) {
-//            action.accelerate = 1.0D;
-//            action.brake = 0.0D;
-//        }
 
         action = this.core.computeAction(sensors);
 
