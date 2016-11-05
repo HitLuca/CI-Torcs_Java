@@ -15,7 +15,7 @@ import race.TorcsConfiguration;
 
 public class FuocoDriverAlgorithm implements Serializable {
 
-    private void run(boolean withGUI, int laps, String track, String road, String load, String save) {
+    private void run(boolean withGUI, int laps, String track, String road, String load, String save) throws IOException {
         try {
             if (withGUI) {
                 Runtime.getRuntime().exec("torcs");
@@ -28,7 +28,7 @@ public class FuocoDriverAlgorithm implements Serializable {
 
         IGenome genome;
         if (load == null) {
-            genome = new DefaultCoreGenome();
+            genome = new FuocoCoreGenome(null);
         } else {
             genome = DriversUtils.getStoredGenome(load);
             if (genome == null) {
@@ -40,7 +40,7 @@ public class FuocoDriverAlgorithm implements Serializable {
         drivers[0] = genome;
 
         FuocoRace race = new FuocoRace();
-        race.setTrack(track, road);
+        race.setTrack("alpine-1", "road");
         race.laps = laps;
 
         int[] results = new int[1];
@@ -51,7 +51,7 @@ public class FuocoDriverAlgorithm implements Serializable {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         TorcsConfiguration.getInstance().initialize(new File("torcs.properties"));
 
 

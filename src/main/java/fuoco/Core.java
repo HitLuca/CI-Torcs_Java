@@ -12,5 +12,5 @@ public interface Core extends Serializable {
 
     void loadGenome(IGenome genome);
 
-    IGenome getGenome();
+    IGenome getGenome() throws IOException;
 }

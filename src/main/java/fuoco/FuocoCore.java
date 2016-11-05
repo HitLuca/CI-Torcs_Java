@@ -7,6 +7,8 @@ import org.nd4j.linalg.factory.Nd4j;
 import scr.Action;
 import scr.SensorModel;
 
+import java.io.IOException;
+
 
 public class FuocoCore implements Core {
 
@@ -25,6 +27,7 @@ public class FuocoCore implements Core {
         }
 
         INDArray features = Nd4j.create(d);
+
         INDArray predicted = net.output(features, false);
 
         action.accelerate = predicted.getDouble(0);
@@ -37,7 +40,7 @@ public class FuocoCore implements Core {
         net = ((FuocoCoreGenome) genome).getNet();
     }
 
-    public IGenome getGenome() {
+    public IGenome getGenome() throws IOException {
         return new FuocoCoreGenome(net);
     }
 }
