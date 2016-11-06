@@ -223,22 +223,25 @@ public class GridWorld {
         boolean load = true;
         if (load) {
             MultiLayerNetwork net =  ModelSerializer.restoreMultiLayerNetwork("pippo");
-            int[] f = new int[100];
-            for (int e = 0; e < 100; e++) {
+            int ty = 10000;
+            int[] f = new int[ty];
+            for (int e = 0; e < ty; e++) {
                 double[] state = initGrid();
 
-                int lim = 100;
+                int lim = 10;
                 while (getReward(state) == -1 && lim > 0) {
                     double[] p = predict(net, state);
                     double[] new_state;
                     Action action;
 
-                    do {
+
+
+//                    do {
                         int k = argmax(p);
                         action = Action.values()[k];
                         new_state = makeMove(state, action);
-                        p[k] = Double.MIN_VALUE;
-                    } while (Arrays.equals(state, new_state));
+//                      p[k] = Double.MIN_VALUE;
+//                    } while (Arrays.equals(state, new_state));
 
                     state = new_state;
                     lim--;
@@ -260,15 +263,15 @@ public class GridWorld {
                 }
             }
 
-            System.out.println(goal);
-            System.out.println(stall);
-            System.out.println(pit);
+            System.out.println(goal*100/ty);
+            System.out.println(stall*100/ty);
+            System.out.println(pit*100/ty);
 
         } else {
 
             MultiLayerNetwork net = initNet(100);
             Random rnd = new Random();
-            int epochs = 200;
+            int epochs = 1000;
             double gamma = 0.975;
             double epsilon = 1;
             int batchSize = 40;
