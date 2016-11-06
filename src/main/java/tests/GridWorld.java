@@ -223,8 +223,8 @@ public class GridWorld {
         boolean load = true;
         if (load) {
             MultiLayerNetwork net =  ModelSerializer.restoreMultiLayerNetwork("pippo");
-
-            for (int e = 0; e < 20; e++) {
+            int[] f = new int[100];
+            for (int e = 0; e < 100; e++) {
                 double[] state = initGrid();
 
                 int lim = 100;
@@ -243,8 +243,27 @@ public class GridWorld {
                     state = new_state;
                     lim--;
                 }
-                System.out.println(getReward(state));
+                f[e] = getReward(state);
             }
+
+            double goal = 0;
+            double stall = 0;
+            double pit = 0;
+
+            for (int e : f) {
+                if (e == 10) {
+                    goal++;
+                } else if (e == -10) {
+                    pit++;
+                } else {
+                    stall++;
+                }
+            }
+
+            System.out.println(goal);
+            System.out.println(stall);
+            System.out.println(pit);
+
         } else {
 
             MultiLayerNetwork net = initNet(100);
