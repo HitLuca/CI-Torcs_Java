@@ -229,19 +229,24 @@ public class GridWorld {
 
     public static void main(String[] args) throws IOException {
 
-        GridState s = GridState.nextState(100);
+        GridState s = GridState.nextState();
         System.out.println(s);
-        double[] stat = initGrid(100);
-        printState(stat);
+        System.exit(0);
+//        GridState s = GridState.nextState(100);
+//        System.out.println(s);
+//        double[] stat = initGrid(100);
+//        printState(stat);
 
-        /*GridWorldNet net = new GridWorldNet("try");
+        //GridWorldNet net = new GridWorldNet(100);
+        GridWorldNet net = new GridWorldNet("try");
 
 //        GridWorldLearn gwl = new GridWorldLearn(net);
 //        gwl.train(100, 0.975, 1, 40, 80);
 //        GridWorldNet gwn = gwl.getClassifier();
 //        gwn.save("try");
 
-        int ty = 1000;
+
+        int ty = 10000;
         double[] f = new double[ty];
         for (int e = 0; e < ty; e++) {
             GridState state = GridState.nextState();
@@ -272,13 +277,12 @@ public class GridWorld {
         System.out.println(stall*100/ty);
         System.out.println(pit*100/ty);
 
-
-        System.exit(0);*/
-
-        boolean load = false;
+//30 60 10
+/*
+        boolean load = true;
         if (load) {
-            MultiLayerNetwork net =  ModelSerializer.restoreMultiLayerNetwork("pippo");
-            int ty = 1000;
+            MultiLayerNetwork net =  ModelSerializer.restoreMultiLayerNetwork("lol");
+            int ty = 10000;
             int[] f = new int[ty];
             for (int e = 0; e < ty; e++) {
                 double[] state = initGrid();
@@ -409,7 +413,7 @@ public class GridWorld {
                 }
             }
             ModelSerializer.writeModel(net, "lol", true);
-        }
+        }*/
     }
 }
 
