@@ -19,7 +19,6 @@ public class GridWorldNet extends NeuralNet<GridState, GridState.Move> {
     public GridWorldNet(int iterations) {
         super(new NeuralNetConfiguration.Builder()
                 .iterations(iterations)
-                .seed(0)
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
                 .weightInit(WeightInit.RELU)
                 .list()

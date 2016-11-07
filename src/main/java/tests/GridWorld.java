@@ -39,7 +39,6 @@ public class GridWorld {
 
     private static MultiLayerNetwork initNet(int iterations) {
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
-            .seed(0)
             .iterations(iterations)
             .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
             .weightInit(WeightInit.RELU)
@@ -229,13 +228,6 @@ public class GridWorld {
 
     public static void main(String[] args) throws IOException {
 
-        GridState s = GridState.nextState();
-        System.out.println(s);
-        System.exit(0);
-//        GridState s = GridState.nextState(100);
-//        System.out.println(s);
-//        double[] stat = initGrid(100);
-//        printState(stat);
 
         //GridWorldNet net = new GridWorldNet(100);
         GridWorldNet net = new GridWorldNet("try");
