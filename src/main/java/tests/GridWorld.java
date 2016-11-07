@@ -15,6 +15,9 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
+import qlearn.gridworld.GridState;
+import qlearn.gridworld.GridWorldLearn;
+import qlearn.gridworld.GridWorldNet;
 
 import java.io.IOException;
 import java.util.*;
@@ -36,7 +39,7 @@ public class GridWorld {
 
     private static MultiLayerNetwork initNet(int iterations) {
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
-            .seed(12165115614545L)
+            .seed(0)
             .iterations(iterations)
             .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
             .weightInit(WeightInit.RELU)
@@ -67,10 +70,12 @@ public class GridWorld {
         return net;
     }
 
-    private static double[] initGrid() {
-        int[][][] state = new int[4][4][3];
+    private static double[] initGrid(long seed) {
+        return initGrid(new Random(seed));
+    }
 
-        Random rnd = new Random();
+    private static double[] initGrid(Random rnd) {
+        int[][][] state = new int[4][4][3];
 
         int[] pit_loc = new int[2];
         int[] goal_loc = new int[2];
@@ -102,6 +107,10 @@ public class GridWorld {
             }
         }
         return r;
+    }
+
+    private static double[] initGrid() {
+        return initGrid(new Random());
     }
 
     private static double[] predict(MultiLayerNetwork net, double[] state) {
@@ -220,10 +229,56 @@ public class GridWorld {
 
     public static void main(String[] args) throws IOException {
 
-        boolean load = true;
+        GridState s = GridState.nextState(100);
+        System.out.println(s);
+        double[] stat = initGrid(100);
+        printState(stat);
+
+        /*GridWorldNet net = new GridWorldNet("try");
+
+//        GridWorldLearn gwl = new GridWorldLearn(net);
+//        gwl.train(100, 0.975, 1, 40, 80);
+//        GridWorldNet gwn = gwl.getClassifier();
+//        gwn.save("try");
+
+        int ty = 1000;
+        double[] f = new double[ty];
+        for (int e = 0; e < ty; e++) {
+            GridState state = GridState.nextState();
+
+            int lim = 10;
+            while (state.getReward() == -1 && lim > 0) {
+                state = state.performAction(net.predictBestActions(state));
+                lim--;
+            }
+            f[e] = state.getReward();
+        }
+
+        double goal = 0;
+        double stall = 0;
+        double pit = 0;
+
+        for (double e : f) {
+            if (e == 10) {
+                goal++;
+            } else if (e == -10) {
+                pit++;
+            } else {
+                stall++;
+            }
+        }
+
+        System.out.println(goal*100/ty);
+        System.out.println(stall*100/ty);
+        System.out.println(pit*100/ty);
+
+
+        System.exit(0);*/
+
+        boolean load = false;
         if (load) {
             MultiLayerNetwork net =  ModelSerializer.restoreMultiLayerNetwork("pippo");
-            int ty = 10000;
+            int ty = 1000;
             int[] f = new int[ty];
             for (int e = 0; e < ty; e++) {
                 double[] state = initGrid();
@@ -271,7 +326,7 @@ public class GridWorld {
 
             MultiLayerNetwork net = initNet(100);
             Random rnd = new Random();
-            int epochs = 1000;
+            int epochs = 100;
             double gamma = 0.975;
             double epsilon = 1;
             int batchSize = 40;
@@ -353,7 +408,7 @@ public class GridWorld {
                     epsilon -= 1 / epochs;
                 }
             }
-            ModelSerializer.writeModel(net, "pippo", true);
+            ModelSerializer.writeModel(net, "lol", true);
         }
     }
 }
