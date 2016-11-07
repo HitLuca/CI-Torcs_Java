@@ -23,7 +23,7 @@ public class FuocoCore implements Core {
         d[2] = sensors.getAngleToTrackAxis();
 
         for (int i = 3; i < d.length; i++) {
-            d[i] = sensors.getTrackEdgeSensors()[i-3];
+            d[i] = sensors.getTrackEdgeSensors()[i - 3];
         }
 
         INDArray features = Nd4j.create(d);
@@ -41,6 +41,6 @@ public class FuocoCore implements Core {
     }
 
     public IGenome getGenome() throws IOException {
-        return new FuocoCoreGenome(net);
+        return null;
     }
 }

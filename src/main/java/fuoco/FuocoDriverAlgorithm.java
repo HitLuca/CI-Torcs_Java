@@ -1,9 +1,5 @@
 package fuoco;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-
 import cicontest.algorithm.abstracts.DriversUtils;
 import cicontest.torcs.genome.IGenome;
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -13,51 +9,16 @@ import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 import race.TorcsConfiguration;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+
 public class FuocoDriverAlgorithm implements Serializable {
 
-    private void run(boolean withGUI, int laps, String track, String road, String load, String save) throws IOException {
-        try {
-            if (withGUI) {
-                Runtime.getRuntime().exec("torcs");
-            } else {
-                Runtime.getRuntime().exec("torcs -r /home/nicola/.torcs/config/raceman/quickrace.xml");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        IGenome genome;
-        if (load == null) {
-            genome = new FuocoCoreGenome(null);
-        } else {
-            genome = DriversUtils.getStoredGenome(load);
-            if (genome == null) {
-                throw new RuntimeException("Genome is null");
-            }
-        }
-
-        IGenome[] drivers = new IGenome[1];
-        drivers[0] = genome;
-
-        FuocoRace race = new FuocoRace();
-        race.setTrack("alpine-1", "road");
-        race.laps = laps;
-
-        int[] results = new int[1];
-        results = race.runRace(drivers, withGUI);
-
-        if (save != null) {
-            DriversUtils.storeGenome(drivers[0], save);
-        }
-    }
-
-    public static void main(String[] args) throws IOException {
-        TorcsConfiguration.getInstance().initialize(new File("torcs.properties"));
-
-
+    private static ArgumentParser configureParser() {
         ArgumentParser parser = ArgumentParsers.newArgumentParser("Train")
                 .defaultHelp(true)
-                .description("#TODO");
+                .description("#TODO"); //TODO implement description
 
         parser.addArgument("-g", "--gui")
                 .action(Arguments.storeTrue())
@@ -83,6 +44,14 @@ public class FuocoDriverAlgorithm implements Serializable {
 
         parser.addArgument("-s", "--save")
                 .help("Filename for saving genome");
+        return parser;
+    }
+
+    public static void main(String[] args) throws IOException {
+        TorcsConfiguration.getInstance().initialize(new File("torcs.properties"));
+
+
+        ArgumentParser parser = configureParser();
 
         try {
             Namespace res = parser.parseArgs(args);
@@ -97,9 +66,45 @@ public class FuocoDriverAlgorithm implements Serializable {
             FuocoDriverAlgorithm algorithm = new FuocoDriverAlgorithm();
             DriversUtils.registerMemory(FuocoDriver.class);
 
-            algorithm.run(withGUI, laps, track, road, load, save);
+            algorithm.run(withGUI, laps, track, road, "output/" + load, save);
         } catch (ArgumentParserException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void run(boolean withGUI, int laps, String track, String road, String load, String save) throws IOException {
+        try {
+            if (withGUI) {
+                Runtime.getRuntime().exec("torcs");
+            } else {
+                Runtime.getRuntime().exec("torcs -r /home/" + System.getProperty("user.name") + "/.torcs/config/raceman/quickrace.xml");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        IGenome genome = new FuocoCoreGenome(load);
+        /*if (load == null) {
+            genome = new FuocoCoreGenome(null);
+        } else {
+            genome = DriversUtils.getStoredGenome(load);
+            System.out.println(genome);
+            if (genome == null) {
+                throw new RuntimeException("Genome is null");
+            }
+        }*/
+
+        IGenome[] drivers = new IGenome[1];
+        drivers[0] = genome;
+
+        FuocoRace race = new FuocoRace();
+        race.setTrack(track, road);
+        race.laps = laps;
+
+        int[] results = race.runRace(drivers, withGUI);
+
+        if (save != null) {
+            DriversUtils.storeGenome(drivers[0], save);
         }
     }
 }

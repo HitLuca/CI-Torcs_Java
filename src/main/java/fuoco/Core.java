@@ -1,10 +1,11 @@
 package fuoco;
 
 import cicontest.torcs.genome.IGenome;
-import scr.SensorModel;
 import scr.Action;
+import scr.SensorModel;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.Serializable;
 
 public interface Core extends Serializable {
 
