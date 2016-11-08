@@ -1,7 +1,6 @@
 package tests;
 
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -9,10 +8,7 @@ import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
-import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
-import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import qlearn.gridworld.GridState;
@@ -21,6 +17,7 @@ import qlearn.gridworld.GridWorldNet;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.Random;
 
 public class GridWorld {
 
@@ -44,7 +41,7 @@ public class GridWorld {
             .weightInit(WeightInit.RELU)
             .list()
             .layer(0, new DenseLayer.Builder()
-                .nIn(4*4*3)
+                .nIn(6*6*3)
                 .nOut(150)
                 .activation("relu")
                 .build())
@@ -74,34 +71,34 @@ public class GridWorld {
     }
 
     private static double[] initGrid(Random rnd) {
-        int[][][] state = new int[4][4][3];
+        int[][][] state = new int[6][6][3];
 
         int[] pit_loc = new int[2];
         int[] goal_loc = new int[2];
         int[] player_loc = new int[2];
 
-        pit_loc[0] = rnd.nextInt(3);
-        pit_loc[1] = rnd.nextInt(3);
+        pit_loc[0] = 1+rnd.nextInt(4);
+        pit_loc[1] = 1+rnd.nextInt(4);
 
         do {
-            goal_loc[0] = rnd.nextInt(3);
-            goal_loc[1] = rnd.nextInt(3);
+            goal_loc[0] = 1+rnd.nextInt(4);
+            goal_loc[1] = 1+rnd.nextInt(4);
         } while (Arrays.equals(pit_loc, goal_loc));
 
         do {
-            player_loc[0] = rnd.nextInt(3);
-            player_loc[1] = rnd.nextInt(3);
+            player_loc[0] = 1+rnd.nextInt(4);
+            player_loc[1] = 1+rnd.nextInt(4);
         } while (Arrays.equals(pit_loc, player_loc) || Arrays.equals(goal_loc, player_loc));
 
         state[pit_loc[0]][pit_loc[1]][Obj.PIT.ordinal()] = 1;
         state[goal_loc[0]][goal_loc[1]][Obj.GOAL.ordinal()] = 1;
         state[player_loc[0]][player_loc[1]][Obj.PLAYER.ordinal()] = 1;
 
-        double[] r = new double[4*4*3];
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
+        double[] r = new double[6*6*3];
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
                 for (int k = 0; k < 3; k++) {
-                    r[12*i + 3*j + k] = state[i][j][k];
+                    r[18*i + 3*j + k] = state[i][j][k];
                 }
             }
         }
@@ -136,9 +133,9 @@ public class GridWorld {
 
     private static int[] getLocation(double[] state, Obj obj) {
         int[] r = {-1, -1};
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                if (state[12 * i + 3 * j + obj.ordinal()] == 1) {
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+                if (state[18 * i + 3 * j + obj.ordinal()] == 1) {
                     r[0] = i;
                     r[1] = j;
                     return r;
@@ -149,7 +146,7 @@ public class GridWorld {
     }
 
     private static double[] makeMove(double[] state, Action action) {
-        double[] new_state = new double[4*4*3];
+        double[] new_state = new double[6*6*3];
         int[] pit_loc = getLocation(state, Obj.PIT);
         int[] goal_loc = getLocation(state, Obj.GOAL);
         int[] player_loc = getLocation(state, Obj.PLAYER);
@@ -174,14 +171,14 @@ public class GridWorld {
                 break;
         }
 
-        if (new_loc[0] >= 0 && new_loc[0] <= 3 && new_loc[1] <= 3 && new_loc[1] >= 0) {
-            new_state[12*new_loc[0] + 3*new_loc[1] + Obj.PLAYER.ordinal()] = 1;
+        if (new_loc[0] >= 0 && new_loc[0] <= 5 && new_loc[1] <= 5 && new_loc[1] >= 0) {
+            new_state[18*new_loc[0] + 3*new_loc[1] + Obj.PLAYER.ordinal()] = 1;
         } else {
-            new_state[12*player_loc[0] + 3*player_loc[1] + Obj.PLAYER.ordinal()] = 1;
+            new_state[18*player_loc[0] + 3*player_loc[1] + Obj.PLAYER.ordinal()] = 1;
         }
 
-        new_state[12*pit_loc[0] + 3*pit_loc[1] + Obj.PIT.ordinal()] = 1;
-        new_state[12*goal_loc[0] + 3*goal_loc[1] + Obj.GOAL.ordinal()] = 1;
+        new_state[18*pit_loc[0] + 3*pit_loc[1] + Obj.PIT.ordinal()] = 1;
+        new_state[18*goal_loc[0] + 3*goal_loc[1] + Obj.GOAL.ordinal()] = 1;
 
         return new_state;
     }
@@ -194,14 +191,16 @@ public class GridWorld {
             return -10;
         } else if (Arrays.equals(player_loc, goal_loc)) {
             return 10;
-        } else {
+        } else if (player_loc[0] == 0 || player_loc[0] == 5 || player_loc[1] == 0 || player_loc[1] == 5) {
+            return -10;
+        }else {
             return -1;
         }
     }
 
     private static void printState(double[] state) {
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
                 String v = "#";
                 for (int k = 0; k < 3; k++) {
                     if (state[12 * i + 3 * j + k] == 1) {
@@ -225,17 +224,65 @@ public class GridWorld {
     }
 
 
+    private static void printVal (GridWorldNet net, int ty) {
+        double[] f = new double[ty];
+        for (int e = 0; e < ty; e++) {
+            GridState state = GridState.nextState();
+
+            int lim = 10;
+            while (state.getReward() == -1 && lim > 0) {
+                state = state.performAction(net.predictBestAction(state));
+                lim--;
+            }
+            f[e] = state.getReward();
+        }
+
+        double goal = 0;
+        double stall = 0;
+        double pit = 0;
+
+        for (double e : f) {
+            if (e == 10) {
+                goal++;
+            } else if (e == -10) {
+                pit++;
+            } else {
+                stall++;
+            }
+        }
+
+        System.out.println(goal*100/ty);
+        System.out.println(stall*100/ty);
+        System.out.println(pit*100/ty);
+    }
 
     public static void main(String[] args) throws IOException {
 
+        GridWorldNet gwn = new GridWorldNet(10);
+        //GridWorldNet gwn = new GridWorldNet("new_try");
+        GridWorldLearn gwl = new GridWorldLearn(gwn);
+        gwl.train(1000, 0.975, 1, 40, 80);
+        gwn = gwl.getClassifier();
+        gwn.save("new_try");
 
-        //GridWorldNet net = new GridWorldNet(100);
-        GridWorldNet net = new GridWorldNet("try");
+        printVal(gwn, 1000);
 
-//        GridWorldLearn gwl = new GridWorldLearn(net);
-//        gwl.train(100, 0.975, 1, 40, 80);
-//        GridWorldNet gwn = gwl.getClassifier();
-//        gwn.save("try");
+        /*Random rnd = new Random();
+        for (int i = 0; i< 100; i++) {
+            System.out.println(rnd.nextInt(4));
+        }
+
+
+        GridState g = GridState.nextState();
+        System.out.println(g);
+
+        GridWorldNet net = new GridWorldNet(100);
+        //GridWorldNet net = new GridWorldNet("try");
+
+        GridWorldLearn gwl = new GridWorldLearn(net);
+        gwl.train(100, 0.975, 1, 40, 80);
+        GridWorldNet gwn = gwl.getClassifier();
+        gwn.save("try");
 
 
         int ty = 10000;
@@ -245,7 +292,7 @@ public class GridWorld {
 
             int lim = 10;
             while (state.getReward() == -1 && lim > 0) {
-                state = state.performAction(net.predictBestActions(state));
+                state = state.performAction(net.predictBestAction(state));
                 lim--;
             }
             f[e] = state.getReward();
@@ -273,36 +320,70 @@ public class GridWorld {
 /*
         boolean load = true;
         if (load) {
-            MultiLayerNetwork net =  ModelSerializer.restoreMultiLayerNetwork("lol");
+
             int ty = 10000;
-            int[] f = new int[ty];
+            int[] t = new int[ty];
+            Random rnd = new Random();
             for (int e = 0; e < ty; e++) {
                 double[] state = initGrid();
-
-                int lim = 10;
-                while (getReward(state) == -1 && lim > 0) {
-                    double[] p = predict(net, state);
-                    double[] new_state;
-                    Action action;
-
-
-
-//                    do {
-                        int k = argmax(p);
-                        action = Action.values()[k];
-                        new_state = makeMove(state, action);
-//                      p[k] = Double.MIN_VALUE;
-//                    } while (Arrays.equals(state, new_state));
-
-                    state = new_state;
-                    lim--;
+                while (getReward(state) == -1) {
+                    Action action = Action.values()[rnd.nextInt(4)];
+                    state = makeMove(state, action);
                 }
-                f[e] = getReward(state);
+                t[e] = getReward(state);
             }
 
             double goal = 0;
             double stall = 0;
             double pit = 0;
+
+            for (int e : t) {
+                if (e == 10) {
+                    goal++;
+                } else if (e == -10) {
+                    pit++;
+                } else {
+                    stall++;
+                }
+            }
+
+            System.out.println(goal*100/ty);
+            System.out.println(stall*100/ty);
+            System.out.println(pit*100/ty);
+
+            MultiLayerNetwork net =  ModelSerializer.restoreMultiLayerNetwork("lol");
+
+            int[] f = new int[ty];
+            for (int e = 0; e < ty; e++) {
+                double[] state = initGrid();
+
+                int[][] lollo = new int[6][6];
+
+                while (getReward(state) == -1) {
+                    double[] p = predict(net, state);
+                    double[] new_state;
+                    Action action;
+
+                    int[] player_loc = getLocation(state, Obj.PLAYER);
+
+                    for(int i = 0; i < lollo[player_loc[0]][player_loc[1]]; i++) {
+                        p[argmax(p)] = Double.NEGATIVE_INFINITY;
+                    }
+                    lollo[player_loc[0]][player_loc[1]]++;
+
+                    int k = argmax(p);
+
+                    action = Action.values()[k];
+                    new_state = makeMove(state, action);
+
+                    state = new_state;
+                }
+                f[e] = getReward(state);
+            }
+
+            goal = 0;
+            stall = 0;
+            pit = 0;
 
             for (int e : f) {
                 if (e == 10) {
@@ -320,18 +401,22 @@ public class GridWorld {
 
         } else {
 
-            MultiLayerNetwork net = initNet(100);
+            MultiLayerNetwork net = initNet(20);
+            //MultiLayerNetwork net =  ModelSerializer.restoreMultiLayerNetwork("lol");
             Random rnd = new Random();
             int epochs = 100;
-            double gamma = 0.975;
+            double gamma = 0.9;
             double epsilon = 1;
             int batchSize = 40;
             int buffer = 80;
             List<Tuple> replay = new LinkedList<Tuple>();
             int h = 0;
 
+            List<double[]> l = new ArrayList<double[]>(epochs);
+
             for (int e = 0; e < epochs; e++) {
                 System.out.println("Epoch: " + e);
+
                 double[] state = initGrid();
 
                 boolean status = true;

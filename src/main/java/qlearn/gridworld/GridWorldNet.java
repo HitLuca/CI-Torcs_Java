@@ -23,7 +23,7 @@ public class GridWorldNet extends NeuralNet<GridState, GridState.Move> {
                 .weightInit(WeightInit.RELU)
                 .list()
                 .layer(0, new DenseLayer.Builder()
-                        .nIn(4*4*3)
+                        .nIn(6*6*3)
                         .nOut(150)
                         .activation("relu")
                         .build())
@@ -55,7 +55,14 @@ public class GridWorldNet extends NeuralNet<GridState, GridState.Move> {
         return actions;
     }
 
-    public GridState.Move predictBestActions(GridState state) {
+    public GridState.Move predictBestAction(GridState state) {
+        double[] d = predict(state);
+        if (argmax(d) == -1) {
+            System.out.println(":_(");
+            System.out.println(state.getValues());
+        } else {
+            System.out.println(":)");
+        }
         return GridState.Move.values()[argmax(predict(state))];
     }
 

@@ -20,7 +20,7 @@ public class GridState implements State<GridState.Move> {
         PLAYER
     }
 
-    private int[][][] state = new int[4][4][3];
+    private int[][][] state = new int[6][6][3];
 
     private int getState(int x, int y, Obj k) {
         return state[x][y][k.ordinal()];
@@ -32,8 +32,8 @@ public class GridState implements State<GridState.Move> {
 
     private int[] getLocation(Obj obj) {
         int[] r = {-1, -1};
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
                 if (getState(i, j, obj) == 1) {
                     r[0] = i;
                     r[1] = j;
@@ -47,20 +47,20 @@ public class GridState implements State<GridState.Move> {
     private static GridState nextState(Random rnd) {
         GridState state = new GridState();
 
-        int[] pit_loc = {rnd.nextInt(3), rnd.nextInt(3)};
+        int[] pit_loc = { 1 + rnd.nextInt(4), 1 + rnd.nextInt(4)};
         state.setState(pit_loc[0], pit_loc[1], Obj.PIT, 1);
 
         int[] goal_loc = new int[2];
         do {
-            goal_loc[0] = rnd.nextInt(3);
-            goal_loc[1] = rnd.nextInt(3);
+            goal_loc[0] = 1 + rnd.nextInt(4);
+            goal_loc[1] = 1 + rnd.nextInt(4);
         } while (Arrays.equals(pit_loc, goal_loc));
         state.setState(goal_loc[0], goal_loc[1], Obj.GOAL, 1);
 
         int[] player_loc = new int[2];
         do {
-            player_loc[0] = rnd.nextInt(3);
-            player_loc[1] = rnd.nextInt(3);
+            player_loc[0] = 1 + rnd.nextInt(4);
+            player_loc[1] = 1 + rnd.nextInt(4);
         } while (Arrays.equals(pit_loc, player_loc) || Arrays.equals(goal_loc, player_loc));
         state.setState(player_loc[0], player_loc[1], Obj.PLAYER, 1);
 
@@ -76,11 +76,11 @@ public class GridState implements State<GridState.Move> {
     }
 
     public double[] getValues() {
-        double[] r = new double[4 * 4 *3];
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
+        double[] r = new double[6 * 6 * 3];
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
                 for (int k = 0; k < 3; k++) {
-                    r[12*i + 3*j + k] = state[i][j][k];
+                    r[18*i + 3*j + k] = state[i][j][k];
                 }
             }
         }
@@ -108,7 +108,7 @@ public class GridState implements State<GridState.Move> {
             new_loc[1] = player_loc[1] - 1;
         }
 
-        if (new_loc[0] >= 0 && new_loc[0] <= 3 && new_loc[1] <= 3 && new_loc[1] >= 0) {
+        if (new_loc[0] >= 0 && new_loc[0] <= 5 && new_loc[1] <= 5 && new_loc[1] >= 0) {
             new_state.setState(new_loc[0], new_loc[1], Obj.PLAYER, 1);
         } else {
             new_state.setState(player_loc[0], player_loc[1], Obj.PLAYER, 1);
@@ -127,6 +127,8 @@ public class GridState implements State<GridState.Move> {
             return -10;
         } else if (Arrays.equals(player_loc, getLocation(Obj.GOAL))) {
             return 10;
+        } else if (player_loc[0] == 0 || player_loc[0] == 5 || player_loc[1] == 0 || player_loc[1] == 5) {
+            return -10;
         } else {
             return -1;
         }
@@ -135,14 +137,16 @@ public class GridState implements State<GridState.Move> {
     @Override
     public String toString() {
         String r = "";
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
                 if (getState(i, j, Obj.PIT) == 1) {
                     r += "-";
                 } else if (getState(i, j, Obj.GOAL) == 1) {
                     r += "+";
                 } else if (getState(i, j, Obj.PLAYER) == 1) {
                     r += "P";
+                } else if(i == 0 || i == 5 || j == 0 || j == 5) {
+                    r += "$";
                 } else {
                     r += "#";
                 }

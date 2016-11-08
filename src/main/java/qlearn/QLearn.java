@@ -26,15 +26,17 @@ public abstract class QLearn<C extends FitablePredictable<S, E>, S extends State
         int h = 0;
 
         for (int e = 0; e < epochs; e++) {
+            System.out.println("Epoch: " + e);
             double reward;
             S state = nextState();
 
             do {
                 E action;
+
                 if (rnd.nextDouble() < epsilon) {
                     action = classifier.predictRandomAction();
                 } else {
-                    action = classifier.predictBestActions(state);
+                    action = classifier.predictBestAction(state);
                 }
 
                 S newState = (S) state.performAction(action);
@@ -107,7 +109,7 @@ public abstract class QLearn<C extends FitablePredictable<S, E>, S extends State
 
     double epsilonDecay(double epsilon, int e, int epochs) {
         if (epsilon > 0.1) {
-            return  epsilon - 1/epochs;
+            return  epsilon - 1.0/epochs;
         } else {
             return epsilon;
         }

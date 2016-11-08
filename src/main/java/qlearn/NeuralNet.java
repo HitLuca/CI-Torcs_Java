@@ -49,7 +49,7 @@ public abstract class NeuralNet<S extends State<E>, E extends Enum> implements F
         ModelSerializer.writeModel(net, filename, true);
     }
 
-    protected static int argmax(double [] elems) {
+    protected static int argmax(double[] elems) {
         int bestIdx = -1;
         double max = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < elems.length; i++) {
