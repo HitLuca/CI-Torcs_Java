@@ -47,16 +47,16 @@ public class GridState implements State<GridState.Move> {
     private static GridState nextState(Random rnd) {
         GridState state = new GridState();
 
-        int[] pit_loc = { 1 + rnd.nextInt(4), 1 + rnd.nextInt(4)};
-        //int[] pit_loc = {4, 3};
+        //int[] pit_loc = { 1 + rnd.nextInt(4), 1 + rnd.nextInt(4)};
+        int[] pit_loc = {4, 3};
         state.setState(pit_loc[0], pit_loc[1], Obj.PIT);
 
-        //int[] goal_loc = {3, 2};
-        int[] goal_loc = new int[2];
-        do {
+        int[] goal_loc = {3, 2};
+        //int[] goal_loc = new int[2];
+        /*do {
             goal_loc[0] = 1 + rnd.nextInt(4);
             goal_loc[1] = 1 + rnd.nextInt(4);
-        } while (Arrays.equals(pit_loc, goal_loc));
+        } while (Arrays.equals(pit_loc, goal_loc));*/
         state.setState(goal_loc[0], goal_loc[1], Obj.GOAL);
 
         int[] player_loc = new int[2];
