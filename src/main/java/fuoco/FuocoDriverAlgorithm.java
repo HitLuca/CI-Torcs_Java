@@ -47,7 +47,7 @@ public class FuocoDriverAlgorithm implements Serializable {
         return parser;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         TorcsConfiguration.getInstance().initialize(new File("torcs.properties"));
 
 
@@ -72,7 +72,7 @@ public class FuocoDriverAlgorithm implements Serializable {
         }
     }
 
-    private void run(boolean withGUI, int laps, String track, String road, String load, String save) throws IOException {
+    private void run(boolean withGUI, int laps, String track, String road, String load, String save) throws Exception {
         try {
             if (withGUI) {
                 Runtime.getRuntime().exec("torcs");

@@ -10,6 +10,7 @@ import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
 import org.datavec.api.split.FileSplit;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
+import org.deeplearning4j.nn.conf.LearningRatePolicy;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
@@ -42,8 +43,9 @@ public class TrainFuocoCore {
 
     private static MultiLayerConfiguration configureNN(int iterations) {
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
-                .seed(12165115614545L)
-                .learningRate(0.0001)
+                .seed(12165115615L)
+                .learningRate(0.001)
+                .momentum(0.1)
                 .iterations(iterations)
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
                 .weightInit(WeightInit.XAVIER)
@@ -90,6 +92,6 @@ public class TrainFuocoCore {
         net.setListeners(new ScoreIterationListener(1));
         net.fit(train_set);
 
-        ModelSerializer.writeModel(net, "memory/" + save, true);
+        ModelSerializer.writeModel(net, "memory/" + save+ ".ffn", true);
     }
 }
