@@ -1,6 +1,7 @@
 package qlearn.gridworld;
 
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
+import org.deeplearning4j.nn.conf.LearningRatePolicy;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
@@ -9,6 +10,7 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import qlearn.NeuralNet;
 
 import java.io.IOException;
+import java.util.Random;
 
 public class GridWorldNet extends NeuralNet<GridState, GridState.Move> {
 
@@ -20,21 +22,24 @@ public class GridWorldNet extends NeuralNet<GridState, GridState.Move> {
         super(new NeuralNetConfiguration.Builder()
                 .iterations(iterations)
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-                .weightInit(WeightInit.RELU)
+                .weightInit(WeightInit.XAVIER)
+                .learningRateDecayPolicy(LearningRatePolicy.Score)
+                .lrPolicyDecayRate(0.8)
+                .learningRate(0.05)
                 .list()
                 .layer(0, new DenseLayer.Builder()
                         .nIn(6*6*3)
-                        .nOut(150)
-                        .activation("relu")
+                        .nOut(500)
+                        .activation("sigmoid")
                         .build())
                 .layer(1, new DenseLayer.Builder()
-                        .nIn(150)
-                        .nOut(150)
-                        .activation("relu")
+                        .nIn(500)
+                        .nOut(500)
+                        .activation("sigmoid")
                         .build())
                 .layer(2, new OutputLayer.Builder(LossFunctions.LossFunction.SQUARED_LOSS)
                         .activation("identity")
-                        .nIn(150)
+                        .nIn(500)
                         .nOut(4)
                         .build())
                 .pretrain(false)
@@ -56,18 +61,11 @@ public class GridWorldNet extends NeuralNet<GridState, GridState.Move> {
     }
 
     public GridState.Move predictBestAction(GridState state) {
-        double[] d = predict(state);
-        if (argmax(d) == -1) {
-            System.out.println(":_(");
-            System.out.println(state.getValues());
-        } else {
-            System.out.println(":)");
-        }
         return GridState.Move.values()[argmax(predict(state))];
     }
 
     public GridState.Move predictRandomAction() {
-        return GridState.Move.values()[new java.util.Random().nextInt(GridState.Move.values().length)];
+        return GridState.Move.values()[new Random().nextInt(GridState.Move.values().length)];
     }
 
 }

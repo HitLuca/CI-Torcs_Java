@@ -26,12 +26,12 @@ public class GridState implements State<GridState.Move> {
         return state[x][y][k.ordinal()];
     }
 
-    private void setState(int x, int y, Obj k, int v) {
-        state[x][y][k.ordinal()] = v;
+    private void setState(int x, int y, Obj k) {
+        state[x][y][k.ordinal()] = 1;
     }
 
     private int[] getLocation(Obj obj) {
-        int[] r = {-1, -1};
+        int[] r = new int[]{-1, -1};
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 6; j++) {
                 if (getState(i, j, obj) == 1) {
@@ -48,27 +48,25 @@ public class GridState implements State<GridState.Move> {
         GridState state = new GridState();
 
         int[] pit_loc = { 1 + rnd.nextInt(4), 1 + rnd.nextInt(4)};
-        state.setState(pit_loc[0], pit_loc[1], Obj.PIT, 1);
+        //int[] pit_loc = {4, 3};
+        state.setState(pit_loc[0], pit_loc[1], Obj.PIT);
 
+        //int[] goal_loc = {3, 2};
         int[] goal_loc = new int[2];
         do {
             goal_loc[0] = 1 + rnd.nextInt(4);
             goal_loc[1] = 1 + rnd.nextInt(4);
         } while (Arrays.equals(pit_loc, goal_loc));
-        state.setState(goal_loc[0], goal_loc[1], Obj.GOAL, 1);
+        state.setState(goal_loc[0], goal_loc[1], Obj.GOAL);
 
         int[] player_loc = new int[2];
         do {
             player_loc[0] = 1 + rnd.nextInt(4);
             player_loc[1] = 1 + rnd.nextInt(4);
         } while (Arrays.equals(pit_loc, player_loc) || Arrays.equals(goal_loc, player_loc));
-        state.setState(player_loc[0], player_loc[1], Obj.PLAYER, 1);
+        state.setState(player_loc[0], player_loc[1], Obj.PLAYER);
 
         return state;
-    }
-
-    public static GridState nextState(long seed) {
-        return nextState(new Random(seed));
     }
 
     public static GridState nextState() {
@@ -95,27 +93,27 @@ public class GridState implements State<GridState.Move> {
         int[] new_loc = new int[2];
 
         if (action == Move.UP) {
-            new_loc[0] = player_loc[0] - 1;
-            new_loc[1] = player_loc[1];
-        } else if (action == Move.RIGHT) {
             new_loc[0] = player_loc[0];
             new_loc[1] = player_loc[1] + 1;
-        } else if (action == Move.DOWN) {
+        } else if (action == Move.RIGHT) {
             new_loc[0] = player_loc[0] + 1;
             new_loc[1] = player_loc[1];
-        } else if (action == Move.LEFT) {
+        } else if (action == Move.DOWN) {
             new_loc[0] = player_loc[0];
             new_loc[1] = player_loc[1] - 1;
+        } else if (action == Move.LEFT) {
+            new_loc[0] = player_loc[0] - 1;
+            new_loc[1] = player_loc[1];
         }
 
         if (new_loc[0] >= 0 && new_loc[0] <= 5 && new_loc[1] <= 5 && new_loc[1] >= 0) {
-            new_state.setState(new_loc[0], new_loc[1], Obj.PLAYER, 1);
+            new_state.setState(new_loc[0], new_loc[1], Obj.PLAYER);
         } else {
-            new_state.setState(player_loc[0], player_loc[1], Obj.PLAYER, 1);
+            new_state.setState(player_loc[0], player_loc[1], Obj.PLAYER);
         }
 
-        new_state.setState(pit_loc[0], pit_loc[1], Obj.PIT, 1);
-        new_state.setState(goal_loc[0], goal_loc[1], Obj.GOAL, 1);
+        new_state.setState(pit_loc[0], pit_loc[1], Obj.PIT);
+        new_state.setState(goal_loc[0], goal_loc[1], Obj.GOAL);
 
         return new_state;
     }

@@ -26,13 +26,14 @@ public abstract class QLearn<C extends FitablePredictable<S, E>, S extends State
         int h = 0;
 
         for (int e = 0; e < epochs; e++) {
-            System.out.println("Epoch: " + e);
+            if (e%10==0) {
+                System.out.println("Epoch: " + e);
+            }
             double reward;
             S state = nextState();
 
             do {
                 E action;
-
                 if (rnd.nextDouble() < epsilon) {
                     action = classifier.predictRandomAction();
                 } else {
@@ -52,8 +53,7 @@ public abstract class QLearn<C extends FitablePredictable<S, E>, S extends State
                     }
                     replay.set(h, new Transition<S, E>(state, action, reward, newState));
 
-                    List<Transition<S, E>> minibatch = new LinkedList<Transition<S, E>>();
-                    sample(replay, minibatch, batchSize);
+                    List<Transition<S, E>> minibatch = sample(replay, batchSize);
 
                     ArrayList<S> x_train = new ArrayList<S>(minibatch.size());
                     ArrayList<double[]> y_train = new ArrayList<double[]>(minibatch.size());
@@ -65,7 +65,7 @@ public abstract class QLearn<C extends FitablePredictable<S, E>, S extends State
                 }
             } while (!rewardTerminal(reward));
 
-            epsilon = epsilonDecay(epsilon, e, epochs);
+            epsilon = epsilonDecay(epsilon, epochs);
         }
         return classifier;
     }
@@ -97,17 +97,23 @@ public abstract class QLearn<C extends FitablePredictable<S, E>, S extends State
         }
     }
 
-    private void sample(List<Transition<S, E>> from, List<Transition<S, E>> to, int size) {
-        do {
-            to.add(from.remove(rnd.nextInt(from.size())));
-        } while (to.size() < size);
+    private List<Transition<S, E>> sample(List<Transition<S, E>> from, int size) {
+        List<Transition<S, E>> output = new LinkedList<Transition<S, E>>();
+        Set indexes = new HashSet();
 
-        for (Transition<S, E> t : to) {
-            from.add(new Transition<S, E>(t.getOldState(), t.getAction(), t.getReward(), t.getNewState()));
+        while (indexes.size()<size) {
+            indexes.add(rnd.nextInt(from.size()));
         }
+
+        Iterator<Integer> iterator = indexes.iterator();
+
+        while(iterator.hasNext()) {
+            output.add(from.get(iterator.next()));
+        }
+        return output;
     }
 
-    double epsilonDecay(double epsilon, int e, int epochs) {
+    double epsilonDecay(double epsilon, int epochs) {
         if (epsilon > 0.1) {
             return  epsilon - 1.0/epochs;
         } else {

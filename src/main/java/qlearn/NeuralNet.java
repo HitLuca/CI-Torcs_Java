@@ -37,10 +37,10 @@ public abstract class NeuralNet<S extends State<E>, E extends Enum> implements F
     }
 
     public double[] predict(S state) {
-        INDArray o = net.output(Nd4j.create(state.getValues()));
-        double[] r = new double[o.length()];
-        for (int i = 0; i < o.length(); i++) {
-            r[i] = o.getDouble(i);
+        INDArray output = net.output(Nd4j.create(state.getValues()));
+        double[] r = new double[output.length()];
+        for (int i = 0; i < output.length(); i++) {
+            r[i] = output.getDouble(i);
         }
         return r;
     }
