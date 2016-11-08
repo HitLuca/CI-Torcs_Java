@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Driver: fuoco.FuocoDriver
+Main-Class: fuoco.FuocoDriverAlgorithm
+Class-Path: lib/cicontest.jar lib/TORCSLauncher.jar

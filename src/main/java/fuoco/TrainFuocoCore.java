@@ -50,11 +50,11 @@ public class TrainFuocoCore {
                 .list()
                 .layer(0, new DenseLayer.Builder()
                         .nIn(22)
-                        .nOut(100)
+                        .nOut(500)
                         .activation("relu")
                         .build())
                 .layer(1, new DenseLayer.Builder()
-                        .nIn(100)
+                        .nIn(500)
                         .nOut(100)
                         .activation("sigmoid")
                         .build())
@@ -82,7 +82,7 @@ public class TrainFuocoCore {
 
         DataSet train_set = iterator.next();
 
-        int iterations = 500;
+        int iterations = 20000;
 
         MultiLayerConfiguration conf = configureNN(iterations);
         MultiLayerNetwork net = new MultiLayerNetwork(conf);
@@ -90,6 +90,6 @@ public class TrainFuocoCore {
         net.setListeners(new ScoreIterationListener(1));
         net.fit(train_set);
 
-        ModelSerializer.writeModel(net, "output/" + save, true);
+        ModelSerializer.writeModel(net, "memory/" + save, true);
     }
 }

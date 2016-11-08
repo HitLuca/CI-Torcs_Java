@@ -4,6 +4,7 @@
     <root id="archive" name="submission.jar">
       <element id="module-output" name="torcs_template" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/cicontest.jar" path-in-jar="/" />
+      <element id="artifact" artifact-name="Maven__net_sourceforge_argparse4j_argparse4j_0_7_0" />
     </root>
   </artifact>
 </component>

@@ -66,7 +66,7 @@ public class FuocoDriverAlgorithm implements Serializable {
             FuocoDriverAlgorithm algorithm = new FuocoDriverAlgorithm();
             DriversUtils.registerMemory(FuocoDriver.class);
 
-            algorithm.run(withGUI, laps, track, road, "output/" + load, save);
+            algorithm.run(withGUI, laps, track, road,  load, save);
         } catch (ArgumentParserException e) {
             e.printStackTrace();
         }
@@ -83,16 +83,17 @@ public class FuocoDriverAlgorithm implements Serializable {
             e.printStackTrace();
         }
 
-        IGenome genome = new FuocoCoreGenome(load);
-        /*if (load == null) {
-            genome = new FuocoCoreGenome(null);
+        IGenome genome;
+        if (load == null) {
+            genome = new DefaultCoreGenome();
         } else {
-            genome = DriversUtils.getStoredGenome(load);
+            load = "memory/" +load;
+            genome = new FuocoCoreGenome(load);
             System.out.println(genome);
             if (genome == null) {
                 throw new RuntimeException("Genome is null");
             }
-        }*/
+        }
 
         IGenome[] drivers = new IGenome[1];
         drivers[0] = genome;
