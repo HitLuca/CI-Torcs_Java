@@ -11,6 +11,7 @@ import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
+import qlearn.Settings;
 import qlearn.gridworld.GridState;
 import qlearn.gridworld.GridWorldLearn;
 import qlearn.gridworld.GridWorldNet;
@@ -35,37 +36,27 @@ public class GridWorld {
         LEFT
     }
 
-    private static int epochs = 100;
-    private static double gamma = 0.975;
-    private static double epsilon = 1;
-    private static int miniBatchSize = 40;
-    private static int buffer = 80;
-    private static int iterations = 100;
-    private static int testNumber = 500;
-    private static String networkConfiguration = "output/test_network";
-    private static String networkResults = "output/network_results.csv";
-
     private static FileWriter writer;
 
     public static void main(String[] args) throws IOException {
-        writer = new FileWriter(networkResults, true);
-        File f = new File(networkConfiguration);
+        writer = new FileWriter(Settings.networkResults, true);
+        File f = new File(Settings.networkConfiguration);
 
-        for(int i=0; i<iterations; i++) {
+        for(int i=0; i<Settings.iterations; i++) {
             GridWorldNet gwn;
             if(f.exists()) {
-                gwn = new GridWorldNet(networkConfiguration);
+                gwn = new GridWorldNet(Settings.networkConfiguration);
             }
             else {
                 gwn = new GridWorldNet(10);
             }
 
             GridWorldLearn gwl = new GridWorldLearn(gwn);
-            gwl.train(epochs, gamma, epsilon, miniBatchSize, buffer);
+            gwl.train(Settings.epochs, Settings.gamma, Settings.epsilon, Settings.miniBatchSize, Settings.buffer);
             gwn = gwl.getClassifier();
-            gwn.save(networkConfiguration);
+            gwn.save(Settings.networkConfiguration);
 
-            printVal(gwn, testNumber, writer);
+            printVal(gwn, Settings.testNumber, writer);
         }
         writer.close();
     }

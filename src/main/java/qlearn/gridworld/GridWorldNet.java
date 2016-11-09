@@ -8,6 +8,7 @@ import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import qlearn.NeuralNet;
+import qlearn.Settings;
 
 import java.io.IOException;
 import java.util.Random;
@@ -25,21 +26,21 @@ public class GridWorldNet extends NeuralNet<GridState, GridState.Move> {
                 .weightInit(WeightInit.XAVIER)
                 .learningRateDecayPolicy(LearningRatePolicy.Score)
                 .lrPolicyDecayRate(0.8)
-                .learningRate(0.05)
+                .learningRate(Settings.learningRate)
                 .list()
                 .layer(0, new DenseLayer.Builder()
-                        .nIn(6*6*3)
-                        .nOut(500)
+                        .nIn(Settings.gridX*Settings.gridY*Settings.elements)
+                        .nOut(Settings.hiddenNeurons)
                         .activation("sigmoid")
                         .build())
                 .layer(1, new DenseLayer.Builder()
-                        .nIn(500)
-                        .nOut(500)
+                        .nIn(Settings.hiddenNeurons)
+                        .nOut(Settings.hiddenNeurons)
                         .activation("sigmoid")
                         .build())
                 .layer(2, new OutputLayer.Builder(LossFunctions.LossFunction.SQUARED_LOSS)
                         .activation("identity")
-                        .nIn(500)
+                        .nIn(Settings.hiddenNeurons)
                         .nOut(4)
                         .build())
                 .pretrain(false)

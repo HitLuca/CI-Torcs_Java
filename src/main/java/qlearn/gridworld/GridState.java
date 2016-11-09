@@ -1,5 +1,6 @@
 package qlearn.gridworld;
 
+import qlearn.Settings;
 import qlearn.State;
 
 import java.util.Arrays;
@@ -15,12 +16,12 @@ public class GridState implements State<GridState.Move> {
     }
 
     private enum Obj {
-        PIT,
-        GOAL,
-        PLAYER
+        PIT, //-10
+        GOAL, //+10
+        PLAYER, //0
     }
 
-    private int[][][] state = new int[6][6][3];
+    private int[][][] state = new int[Settings.gridX][Settings.gridY][Settings.elements];
 
     private int getState(int x, int y, Obj k) {
         return state[x][y][k.ordinal()];
@@ -32,8 +33,8 @@ public class GridState implements State<GridState.Move> {
 
     private int[] getLocation(Obj obj) {
         int[] r = new int[]{-1, -1};
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 6; j++) {
+        for (int i = 0; i < Settings.gridX; i++) {
+            for (int j = 0; j < Settings.gridY; j++) {
                 if (getState(i, j, obj) == 1) {
                     r[0] = i;
                     r[1] = j;
@@ -47,22 +48,32 @@ public class GridState implements State<GridState.Move> {
     private static GridState nextState(Random rnd) {
         GridState state = new GridState();
 
-        //int[] pit_loc = { 1 + rnd.nextInt(4), 1 + rnd.nextInt(4)};
-        int[] pit_loc = {4, 3};
+        int[] pit_loc;
+        if (Settings.keepSamePositioning) {
+            pit_loc = new int[]{4, 3};
+        }
+        else {
+            pit_loc = new int[]{ 1 + rnd.nextInt(Settings.gridX-2), 1 + rnd.nextInt(Settings.gridY-2)};
+        }
         state.setState(pit_loc[0], pit_loc[1], Obj.PIT);
 
-        int[] goal_loc = {3, 2};
-        //int[] goal_loc = new int[2];
-        /*do {
-            goal_loc[0] = 1 + rnd.nextInt(4);
-            goal_loc[1] = 1 + rnd.nextInt(4);
-        } while (Arrays.equals(pit_loc, goal_loc));*/
+        int[] goal_loc;
+        if (Settings.keepSamePositioning) {
+            goal_loc = new int[]{3, 2};
+        }
+        else {
+            goal_loc = new int[2];
+            do {
+                goal_loc[0] = 1 + rnd.nextInt(Settings.gridX-2);
+                goal_loc[1] = 1 + rnd.nextInt(Settings.gridY-2);
+            } while (Arrays.equals(pit_loc, goal_loc));
+        }
         state.setState(goal_loc[0], goal_loc[1], Obj.GOAL);
 
         int[] player_loc = new int[2];
         do {
-            player_loc[0] = 1 + rnd.nextInt(4);
-            player_loc[1] = 1 + rnd.nextInt(4);
+            player_loc[0] = 1 + rnd.nextInt(Settings.gridX-2);
+            player_loc[1] = 1 + rnd.nextInt(Settings.gridY-2);
         } while (Arrays.equals(pit_loc, player_loc) || Arrays.equals(goal_loc, player_loc));
         state.setState(player_loc[0], player_loc[1], Obj.PLAYER);
 
@@ -74,11 +85,13 @@ public class GridState implements State<GridState.Move> {
     }
 
     public double[] getValues() {
-        double[] r = new double[6 * 6 * 3];
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 6; j++) {
-                for (int k = 0; k < 3; k++) {
-                    r[18*i + 3*j + k] = state[i][j][k];
+        double[] r = new double[Settings.gridX * Settings.gridY * Settings.elements];
+        for (int i = 0; i < Settings.gridX; i++) {
+            for (int j = 0; j < Settings.gridY; j++) {
+                for (int k = 0; k < Settings.elements; k++) {
+                    int k1 = Settings.gridY*Settings.elements;
+                    int k2 = Settings.elements;
+                    r[k1*i + k2*j + k] = state[i][j][k];
                 }
             }
         }
@@ -106,7 +119,7 @@ public class GridState implements State<GridState.Move> {
             new_loc[1] = player_loc[1];
         }
 
-        if (new_loc[0] >= 0 && new_loc[0] <= 5 && new_loc[1] <= 5 && new_loc[1] >= 0) {
+        if (new_loc[0] >= 0 && new_loc[0] <= Settings.gridX-1 && new_loc[1] <= Settings.gridY-1 && new_loc[1] >= 0) {
             new_state.setState(new_loc[0], new_loc[1], Obj.PLAYER);
         } else {
             new_state.setState(player_loc[0], player_loc[1], Obj.PLAYER);
@@ -125,7 +138,7 @@ public class GridState implements State<GridState.Move> {
             return -10;
         } else if (Arrays.equals(player_loc, getLocation(Obj.GOAL))) {
             return 10;
-        } else if (player_loc[0] == 0 || player_loc[0] == 5 || player_loc[1] == 0 || player_loc[1] == 5) {
+        } else if (player_loc[0] == 0 || player_loc[0] == Settings.gridX-1 || player_loc[1] == 0 || player_loc[1] == Settings.gridY-1) {
             return -10;
         } else {
             return -1;
