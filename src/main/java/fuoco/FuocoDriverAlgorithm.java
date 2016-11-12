@@ -87,12 +87,7 @@ public class FuocoDriverAlgorithm implements Serializable {
         if (load == null) {
             genome = new DefaultCoreGenome();
         } else {
-            load = "memory/" +load;
-            genome = new FuocoCoreGenome(load);
-            System.out.println(genome);
-            if (genome == null) {
-                throw new RuntimeException("Genome is null");
-            }
+            genome = new FuocoCoreGenome("memory/" + load);
         }
 
         IGenome[] drivers = new IGenome[1];
