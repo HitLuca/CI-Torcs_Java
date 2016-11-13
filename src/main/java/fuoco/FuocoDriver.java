@@ -66,6 +66,11 @@ public class FuocoDriver extends AbstractDriver {
     }
 
     @Override
+    public float[] initAngles() {
+        return new float[]{-45, -19, -12, -7, -4, -2.5F, -1.7F, -1, -.5F, 0, .5F, 1, 1.7F, 2.5F, 4, 7, 12, 19, 45};
+    }
+
+    @Override
     public Action defaultControl(Action action, SensorModel sensors) {
 
         action = this.core.computeAction(sensors);

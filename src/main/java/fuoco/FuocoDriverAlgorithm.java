@@ -73,7 +73,7 @@ public class FuocoDriverAlgorithm implements Serializable {
     }
 
     private void run(boolean withGUI, int laps, String track, String road, String load, String save) throws Exception {
-        try {
+        /*try {
             if (withGUI) {
                 Runtime.getRuntime().exec("torcs");
             } else {
@@ -81,7 +81,7 @@ public class FuocoDriverAlgorithm implements Serializable {
             }
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
 
         IGenome genome;
         if (load == null) {
