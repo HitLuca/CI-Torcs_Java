@@ -22,7 +22,7 @@ public class FuocoCore implements Core {
         Action action = new Action();
         double[] d = new double[29];
 
-        d[0] = sensors.getAngleToTrackAxis()/3.1416;
+        d[0] = sensors.getAngleToTrackAxis()/Math.PI;
         for (int i = 1; i < 20; i++) {
             d[i] = sensors.getTrackEdgeSensors()[i - 1]/200.0;
         }
@@ -38,8 +38,15 @@ public class FuocoCore implements Core {
         INDArray predicted = net.output(Nd4j.create(d));
 
         action.steering = Math.tanh(predicted.getDouble(0));
-        action.accelerate = sigmoid(predicted.getDouble(1));
-        action.brake = sigmoid(predicted.getDouble(2));
+        double acc_brake = Math.tanh(predicted.getDouble(1));
+        if(acc_brake > 0) {
+            action.accelerate = acc_brake;
+            action.brake = 0;
+        } else {
+            action.accelerate = 0;
+            action.brake = acc_brake;
+        }
+
 
         return action;
     }
