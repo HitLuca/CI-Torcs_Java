@@ -56,6 +56,7 @@ public class FuocoCore implements Core {
 
         action.steering = predicted[0];
 
+
         if (predicted[1] >= 0) {
             action.accelerate = predicted[1];
             action.brake = 0;
