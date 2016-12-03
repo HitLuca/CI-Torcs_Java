@@ -17,10 +17,10 @@ public class FuocoDriver extends AbstractDriver {
     private Action action = new Action();
 
     public FuocoDriver() {
-        this.enableExtras(new AutomatedClutch());
+        //this.enableExtras(new AutomatedClutch());
         this.enableExtras(new AutomatedGearbox());
-        this.enableExtras(new AutomatedRecovering());
-        this.enableExtras(new ABS());
+//        this.enableExtras(new AutomatedRecovering());
+        //this.enableExtras(new ABS());
     }
 
     @Override
@@ -81,11 +81,11 @@ public class FuocoDriver extends AbstractDriver {
 
         action = this.core.computeAction(sensors);
 
-        System.out.println("--------------" + getDriverName() + "--------------");
-        System.out.println("Steering: " + action.steering);
-        System.out.println("Acceleration: " + action.accelerate);
-        System.out.println("Brake: " + action.brake);
-        System.out.println("-----------------------------------------------");
+//        System.out.println("--------------" + getDriverName() + "--------------");
+//        System.out.println("Steering: " + action.steering);
+//        System.out.println("Acceleration: " + action.accelerate);
+//        System.out.println("Brake: " + action.brake);
+//        System.out.println("-----------------------------------------------");
 
 
         return action;
