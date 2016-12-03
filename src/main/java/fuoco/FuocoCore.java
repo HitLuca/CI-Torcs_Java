@@ -8,6 +8,7 @@ import org.nd4j.linalg.factory.Nd4j;
 import scr.Action;
 import scr.SensorModel;
 
+import javax.sound.midi.Track;
 import java.io.*;
 import java.util.ArrayList;
 
@@ -62,16 +63,15 @@ public class FuocoCore implements Core {
         Action action = new Action();
 
         ArrayList<INDArray> predictions = retrievePredictions(sensors);
+        double destination = predictions.get(0).meanNumber().doubleValue() * 0.9;
 
-        action.steering = predictions.get(0).meanNumber().doubleValue();
-        double predicted = predictions.get(1).minNumber().doubleValue();
+        action.steering = DriversUtils.moveTowardsTrackPosition(sensors, 1, destination);
+        double speed = (predictions.get(1).minNumber().doubleValue() + 1) * 0.5;
 
-        if (predicted >= 0) {
-            action.accelerate = predicted;
-            action.brake = 0;
+        if (speed > sensors.getSpeed()) {
+            action.brake = 1.0;
         } else {
-            action.accelerate = 0;
-            action.brake = -predicted;
+            action.accelerate = 1.0;
         }
 
         return action;
