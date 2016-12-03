@@ -16,7 +16,7 @@ import static org.nd4j.linalg.api.ndarray.INDArray.*;
 public class FuocoCore implements Core {
 
     private MultiLayerNetwork[] nets;
-    private PrintWriter file = new PrintWriter("steering.csv");
+    private PrintWriter file = new PrintWriter("sensors.csv");
 
     public FuocoCore() throws FileNotFoundException {
     }
@@ -67,6 +67,9 @@ public class FuocoCore implements Core {
 //        for (int i = 0; i < 3; i++) {
 //            a += s.getDouble(i);
 //        }
+//
+//        file.println(Nd4j.create(steering).meanNumber().doubleValue()+" "+Nd4j.create(steering).stdNumber().doubleValue());
+//        file.flush();
 
         predictions[0] = Nd4j.create(steering).meanNumber().doubleValue();
         predictions[1] = Nd4j.create(accelBrake).minNumber().doubleValue();
@@ -104,10 +107,11 @@ public class FuocoCore implements Core {
             action.brake = -predicted[1];
         }
 
-        if (Math.abs(sensors.getTrackPosition()) > 0.7) {
-            action.steering = DriversUtils.moveTowardsTrackPosition(sensors, 0.5, 0);
-            action.brake = 0.1;
-        }
+//        if (Math.abs(sensors.getTrackPosition()) > 0.7) {
+//            action.steering = DriversUtils.moveTowardsTrackPosition(sensors, 0.5, 0);
+//            action.brake = 0.1;
+//        }
+
 
         return action;
     }
