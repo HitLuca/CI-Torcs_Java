@@ -50,7 +50,6 @@ public class FuocoDriverAlgorithm implements Serializable {
     public static void main(String[] args) throws Exception {
         TorcsConfiguration.getInstance().initialize(new File("torcs.properties"));
 
-
         ArgumentParser parser = configureParser();
 
         try {
@@ -58,7 +57,11 @@ public class FuocoDriverAlgorithm implements Serializable {
             boolean withGUI = res.getBoolean("gui");
             int laps = res.getInt("laps");
             String track = res.getString("track");
+            track = track.substring(1).substring(0, track.length() - 2);
+
             String road = res.getString("road");
+            road = road.substring(1).substring(0, road.length() - 2);
+
             String load = res.getString("open");
             String save = res.getString("save");
 
@@ -94,6 +97,8 @@ public class FuocoDriverAlgorithm implements Serializable {
         drivers[0] = genome;
 
         FuocoRace race = new FuocoRace();
+        System.out.println(track);
+        System.out.println(road);
         race.setTrack(track, road);
         race.laps = laps;
 

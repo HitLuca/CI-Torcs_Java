@@ -10,6 +10,8 @@ import scr.SensorModel;
 
 import java.io.*;
 
+import static org.nd4j.linalg.api.ndarray.INDArray.*;
+
 
 public class FuocoCore implements Core {
 
@@ -34,10 +36,17 @@ public class FuocoCore implements Core {
             accelBrake[i] = prediction.getDouble(1);
         }
 
-        file.println(Nd4j.create(steering).meanNumber().doubleValue()+" "+Nd4j.create(steering).stdNumber().doubleValue());
-        file.flush();
+//        file.println(Nd4j.create(steering).meanNumber().doubleValue()+" "+Nd4j.create(steering).stdNumber().doubleValue());
+//        file.flush();
 
-        double d = Nd4j.create(steering).meanNumber().doubleValue();
+//        System.out.println(Nd4j.create(steering).meanNumber().doubleValue());
+//        for (int i = 0; i < steering.length; i++) {
+//            System.out.println(Nd4j.sort(Nd4j.create(steering), 1, true).getDouble(i));
+//        }
+//
+//        System.out.println("\n\n\n");
+//
+//        double d = Nd4j.create(steering).meanNumber().doubleValue();
 
 //        if (d > 0) {
 //            d = Math.pow(Math.abs(d), 2);
@@ -45,14 +54,22 @@ public class FuocoCore implements Core {
 //            d = -Math.pow(Math.abs(d), 2);
 //        }
 
-        predictions[0] = d;
-        predictions[1] = Nd4j.create(accelBrake).minNumber().doubleValue();
-//
-//        double sp = sensors.getDouble(21);
-//
-//        if (predictions[1] < 0) {
-//            predictions[1] *= 4*(1-(1+sp)/(3*sp+1)) ;
+//        predictions[0] = d;
+//        System.out.println(Nd4j.create(accelBrake).minNumber().doubleValue());
+//        for (int i = 0; i< accelBrake.length; i++) {
+//            System.out.println();
 //        }
+//
+//        System.out.println("\n\n\n");
+
+//        double a = 0;
+//        INDArray s = Nd4j.sort(Nd4j.create(accelBrake), 1, true);
+//        for (int i = 0; i < 3; i++) {
+//            a += s.getDouble(i);
+//        }
+
+        predictions[0] = Nd4j.create(steering).meanNumber().doubleValue();
+        predictions[1] = Nd4j.create(accelBrake).minNumber().doubleValue();
 
         return predictions;
     }
