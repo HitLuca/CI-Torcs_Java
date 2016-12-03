@@ -26,7 +26,7 @@ public class FuocoDriverAlgorithm implements Serializable {
 
         parser.addArgument("-l", "--laps")
                 .nargs(1)
-                .setDefault(1)
+                .setDefault("[1]")
                 .help("Number of laps");
 
         parser.addArgument("-t", "--track")
@@ -55,7 +55,10 @@ public class FuocoDriverAlgorithm implements Serializable {
         try {
             Namespace res = parser.parseArgs(args);
             boolean withGUI = res.getBoolean("gui");
-            int laps = res.getInt("laps");
+
+            String laps_string = res.getString("laps");
+            int laps = Integer.parseInt(laps_string.substring(1).substring(0, laps_string.length() - 2));
+
             String track = res.getString("track");
             track = track.substring(1).substring(0, track.length() - 2);
 
