@@ -1,5 +1,6 @@
 package fuoco;
 
+import cicontest.algorithm.abstracts.DriversUtils;
 import cicontest.torcs.genome.IGenome;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -7,12 +8,16 @@ import org.nd4j.linalg.factory.Nd4j;
 import scr.Action;
 import scr.SensorModel;
 
-import java.io.IOException;
+import java.io.*;
 
 
 public class FuocoCore implements Core {
 
     private MultiLayerNetwork[] nets;
+    private PrintWriter file = new PrintWriter("steering.csv");
+
+    public FuocoCore() throws FileNotFoundException {
+    }
 
 //    private static double sigmoid(double x) {
 //        return (1/( 1 + Math.pow(Math.E,(-1*x))));
@@ -29,8 +34,25 @@ public class FuocoCore implements Core {
             accelBrake[i] = prediction.getDouble(1);
         }
 
-        predictions[0] = Nd4j.create(steering).mean().getDouble(0);
-        predictions[1] = Nd4j.create(accelBrake).min().getDouble(0);
+        file.println(Nd4j.create(steering).meanNumber().doubleValue()+" "+Nd4j.create(steering).stdNumber().doubleValue());
+        file.flush();
+
+        double d = Nd4j.create(steering).meanNumber().doubleValue();
+
+//        if (d > 0) {
+//            d = Math.pow(Math.abs(d), 2);
+//        } else {
+//            d = -Math.pow(Math.abs(d), 2);
+//        }
+
+        predictions[0] = d;
+        predictions[1] = Nd4j.create(accelBrake).minNumber().doubleValue();
+//
+//        double sp = sensors.getDouble(21);
+//
+//        if (predictions[1] < 0) {
+//            predictions[1] *= 4*(1-(1+sp)/(3*sp+1)) ;
+//        }
 
         return predictions;
     }
@@ -63,6 +85,11 @@ public class FuocoCore implements Core {
         } else {
             action.accelerate = 0;
             action.brake = -predicted[1];
+        }
+
+        if (Math.abs(sensors.getTrackPosition()) > 0.7) {
+            action.steering = DriversUtils.moveTowardsTrackPosition(sensors, 0.5, 0);
+            action.brake = 0.1;
         }
 
         return action;

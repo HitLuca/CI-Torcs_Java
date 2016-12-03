@@ -9,6 +9,8 @@ import cicontest.torcs.genome.IGenome;
 import scr.Action;
 import scr.SensorModel;
 
+import java.io.FileNotFoundException;
+
 public class FuocoDriver extends AbstractDriver {
 
     private Core core;
@@ -24,7 +26,11 @@ public class FuocoDriver extends AbstractDriver {
     @Override
     public void loadGenome(IGenome genome) {
         if (genome instanceof FuocoCoreGenome) {
-            core = new FuocoCore();
+            try {
+                core = new FuocoCore();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
         } else {
             core = new DefaultCore();
         }
