@@ -81,9 +81,9 @@ public class FuocoDriverAlgorithm implements Serializable {
     private void run(boolean withGUI, int laps, String track, String road, String load, String save) throws Exception {
         try {
             if (withGUI) {
-                Runtime.getRuntime().exec("torcs");
+                Runtime.getRuntime().exec("torcs -t 40000");
             } else {
-                Runtime.getRuntime().exec("torcs -r /home/" + System.getProperty("user.name") + "/.torcs/config/raceman/quickrace.xml");
+                Runtime.getRuntime().exec("torcs -t 40000 -r /home/" + System.getProperty("user.name") + "/.torcs/config/raceman/quickrace.xml");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -100,8 +100,7 @@ public class FuocoDriverAlgorithm implements Serializable {
         drivers[0] = genome;
 
         FuocoRace race = new FuocoRace();
-        System.out.println(track);
-        System.out.println(road);
+
         race.setTrack(track, road);
         race.laps = laps;
 

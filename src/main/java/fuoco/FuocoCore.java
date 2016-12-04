@@ -18,36 +18,29 @@ import static org.nd4j.linalg.api.ndarray.INDArray.*;
 public class FuocoCore implements Core {
 
     private MultiLayerNetwork[] nets;
-    private PrintWriter file = new PrintWriter("java_gear.dat");
-    private boolean recoveryMode = false;
-    int count = 0;
-    ArrayList<INDArray> lastPredictions;
-
+    private int[] gearUp = new int[]{9000, 8500, 8500, 8000, 8000, 0};
+    private int[] gearDown = new int[]{0, 3500, 4000, 4000, 4500, 4500};
+    private int gear = 0;
+    private double last_rmp = 0;
+    private int change_gear = 3;
 
     public FuocoCore() throws FileNotFoundException {
     }
 
     private ArrayList<INDArray> retrievePredictions(SensorModel sensors) {
-        if(count == 0) {
-            ArrayList<INDArray> predictions = new ArrayList<>(2);
-            double[] steering = new double[nets.length];
-            double[] accelBrake = new double[nets.length];
-            for (int i = 0; i < nets.length; i++) {
-                INDArray prediction = nets[i].output(sensors2INDArray(sensors));
-                steering[i] = prediction.getDouble(0);
-                accelBrake[i] = prediction.getDouble(1);
-            }
-
-            predictions.add(Nd4j.create(steering));
-            predictions.add(Nd4j.create(accelBrake));
-            lastPredictions = predictions;
-        }
-        count++;
-        if(count == 5){
-            count=0;
+        ArrayList<INDArray> predictions = new ArrayList<>(2);
+        double[] steering = new double[nets.length];
+        double[] accelBrake = new double[nets.length];
+        for (int i = 0; i < nets.length; i++) {
+            INDArray prediction = nets[i].output(sensors2INDArray(sensors));
+            steering[i] = prediction.getDouble(0);
+            accelBrake[i] = prediction.getDouble(1);
         }
 
-        return lastPredictions;
+        predictions.add(Nd4j.create(steering));
+        predictions.add(Nd4j.create(accelBrake));
+
+        return predictions;
     }
 
     private INDArray sensors2INDArray(SensorModel sensors) {
@@ -66,8 +59,6 @@ public class FuocoCore implements Core {
         }
         d[28] = sensors.getRPM()/10000.0;
 
-
-
         return Nd4j.create(d);
     }
 
@@ -76,10 +67,24 @@ public class FuocoCore implements Core {
 
         ArrayList<INDArray> predictions = retrievePredictions(sensors);
 
-
-
         action.steering = predictions.get(0).meanNumber().doubleValue();
-        double predicted = predictions.get(1).minNumber().doubleValue();
+
+        double predicted;
+
+        double d = 0;
+        if (predictions.get(1).minNumber().doubleValue() < 0) {
+            for (int i = 0; i < predictions.get(0).size(1); i++) {
+                if (predictions.get(1).getDouble(i) > 0) {
+                    d += predictions.get(1).getDouble(i) * 0.1;
+                } else {
+                    d += predictions.get(1).getDouble(i) * 2;
+                }
+            }
+            predicted = d / predictions.get(1).size(1);
+        } else {
+            predicted = predictions.get(1).meanNumber().doubleValue();
+        }
+
         if (predicted >= 0) {
             action.accelerate = predicted;
             action.brake = 0;
@@ -88,13 +93,25 @@ public class FuocoCore implements Core {
             action.brake = -predicted;
         }
 
-        if(predictions.get(0).stdNumber().doubleValue()>0.6){
-            recoveryMode = true;
-        } else if(predictions.get(0).stdNumber().doubleValue()>0.3){
-            recoveryMode = false;
+        if (change_gear < 3) {
+            last_rmp = 5000;
+            change_gear++;
+        } else {
+            change_gear = 0;
+            last_rmp = sensors.getRPM();
         }
 
-        file.write(action.gear+"\n");
+        if(gear < 1) {
+            gear = 1;
+        } else if(gear < 6 && last_rmp >= (double)this.gearUp[gear - 1]) {
+            gear = gear + 1;
+        } else {
+            if(gear > 1 && last_rmp <= (double)this.gearDown[gear - 1]) {
+                gear = gear - 1;
+            }
+        }
+
+        action.gear = gear;
 
         return action;
     }

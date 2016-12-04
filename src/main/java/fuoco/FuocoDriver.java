@@ -17,10 +17,10 @@ public class FuocoDriver extends AbstractDriver {
     private Action action = new Action();
 
     public FuocoDriver() {
-        //this.enableExtras(new AutomatedClutch());
-        this.enableExtras(new AutomatedGearbox());
+//        this.enableExtras(new AutomatedClutch());
+//        this.enableExtras(new AutomatedGearbox());
 //        this.enableExtras(new AutomatedRecovering());
-        //this.enableExtras(new ABS());
+//        this.enableExtras(new ABS());
     }
 
     @Override
