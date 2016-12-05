@@ -8,21 +8,69 @@ import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
+
 import race.TorcsConfiguration;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
 import java.io.File;
-import java.io.IOException;
+
 import java.io.Serializable;
+import java.util.*;
 
 public class FuocoDriverAlgorithm implements Serializable {
+
+    class FuocoResults {
+        public RaceResult res;
+        public boolean damage;
+
+        FuocoResults(RaceResult res, boolean damage) {
+            this.res = res;
+            this.damage = damage;
+        }
+    }
+
+    Map<String, String> trackDict = new HashMap<>();
+    Set<String> tracks = new HashSet<>();
+
+    private FuocoDriverAlgorithm() {
+        trackDict.put("aalborg", "road");
+        trackDict.put("alpine-1", "road");
+        trackDict.put("alpine-2", "road");
+        trackDict.put("brondehach", "road");
+        trackDict.put("corkscrew", "road");
+        trackDict.put("eroad", "road");
+        trackDict.put("e-track-1", "road");
+        trackDict.put("e-track-2", "road");
+        trackDict.put("e-track-3", "road");
+        trackDict.put("e-track-4", "road");
+        trackDict.put("e-track-6", "road");
+        trackDict.put("forza", "road");
+        trackDict.put("g-track-1", "road");
+        trackDict.put("g-track-2", "road");
+        trackDict.put("g-track-3", "road");
+        trackDict.put("ole-road-1", "road");
+        trackDict.put("ruudskogen", "road");
+        trackDict.put("spring", "road");
+        trackDict.put("street-1", "road");
+        trackDict.put("wheel-1", "road");
+        trackDict.put("wheel-2", "road");
+        trackDict.put("a-speedway", "oval");
+        trackDict.put("b-speedway", "oval");
+        trackDict.put("c-speedway", "oval");
+        trackDict.put("d-speedway", "oval");
+        trackDict.put("e-speedway", "oval");
+        trackDict.put("e-track-5", "oval");
+        trackDict.put("f-speedway", "oval");
+        trackDict.put("g-speedway", "oval");
+        trackDict.put("michigan", "oval");
+        trackDict.put("dirt-1", "dirt");
+        trackDict.put("dirt-2", "dirt");
+        trackDict.put("dirt-3", "dirt");
+        trackDict.put("dirt-4", "dirt");
+        trackDict.put("dirt-5", "dirt");
+        trackDict.put("dirt-6", "dirt");
+        trackDict.put("mixed-1", "dirt");
+        trackDict.put("mixed-2", "dirt");
+    }
 
     private static ArgumentParser configureParser() {
         ArgumentParser parser = ArgumentParsers.newArgumentParser("Train")
@@ -58,7 +106,6 @@ public class FuocoDriverAlgorithm implements Serializable {
 
     public static void main(String[] args) throws Exception {
 
-
         TorcsConfiguration.getInstance().initialize(new File("torcs.properties"));
 
         ArgumentParser parser = configureParser();
@@ -83,10 +130,42 @@ public class FuocoDriverAlgorithm implements Serializable {
             FuocoDriverAlgorithm algorithm = new FuocoDriverAlgorithm();
             DriversUtils.registerMemory(FuocoDriver.class);
 
-            algorithm.run(withGUI, laps, track, road,  load, save);
+            algorithm.sampleTracks(5);
+            algorithm.fitness(new double[]{1, 1, 1, 1}, new double[]{1, 1, 1, 1}, false, false, false, 15, 1.5);
+
+//            algorithm.run(withGUI, laps, track, road,  load, save);
         } catch (ArgumentParserException e) {
             e.printStackTrace();
         }
+    }
+
+    private void sampleTracks(int n) {
+        List<String> allTracks = new ArrayList<>(trackDict.keySet());
+        Collections.shuffle(allTracks);
+        tracks.clear();
+        for (int i = 0; i < n; i++) {
+            tracks.add(allTracks.get(i));
+        }
+    }
+
+    private List<FuocoResults> fitness(double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
+        List<FuocoResults> results = new ArrayList<>();
+
+        for(String t : tracks) {
+//            System.out.println(t);
+            IGenome[] drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", steeringWeights, accelBrakegWeights, ABS, AutomatedGearbox, min, space_offset, brake_force)};
+
+            FuocoRace race = new FuocoRace();
+
+            race.setTrack(t, trackDict.get(t));
+            RaceResult r = race.runRace(drivers, false)[0];
+
+//            System.out.println(r.getTime());
+//            System.out.println(((FuocoDriver) r.getDriver()).hasDamage());
+
+            results.add(new FuocoResults(r, ((FuocoDriver) r.getDriver()).hasDamage()));
+        }
+        return results;
     }
 
     private void run(boolean withGUI, int laps, String track, String road, String load, String save) throws Exception {

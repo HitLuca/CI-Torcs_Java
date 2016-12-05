@@ -15,6 +15,7 @@ public class FuocoDriver extends AbstractDriver {
 
     private Core core;
     private Action action = new Action();
+    private boolean hasDamage = false;
 
     public FuocoDriver() {
 //        this.enableExtras(new AutomatedClutch());
@@ -76,10 +77,16 @@ public class FuocoDriver extends AbstractDriver {
         return new float[]{-45, -19, -12, -7, -4, -2.5F, -1.7F, -1, -.5F, 0, .5F, 1, 1.7F, 2.5F, 4, 7, 12, 19, 45};
     }
 
+    public boolean hasDamage() {
+        return hasDamage;
+    }
+
     @Override
     public Action defaultControl(Action action, SensorModel sensors) {
 
         action = this.core.computeAction(sensors);
+
+        hasDamage = sensors.getDamage() > 0;
 
 //        System.out.println("--------------" + getDriverName() + "--------------");
 //        System.out.println("Steering: " + action.steering);
