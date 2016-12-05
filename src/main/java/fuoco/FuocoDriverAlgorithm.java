@@ -8,8 +8,16 @@ import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 import race.TorcsConfiguration;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -49,6 +57,8 @@ public class FuocoDriverAlgorithm implements Serializable {
     }
 
     public static void main(String[] args) throws Exception {
+
+
         TorcsConfiguration.getInstance().initialize(new File("torcs.properties"));
 
         ArgumentParser parser = configureParser();
@@ -80,15 +90,6 @@ public class FuocoDriverAlgorithm implements Serializable {
     }
 
     private void run(boolean withGUI, int laps, String track, String road, String load, String save) throws Exception {
-        try {
-            if (withGUI) {
-                Runtime.getRuntime().exec("torcs -t 80000");
-            } else {
-                Runtime.getRuntime().exec("torcs -t 80000 -r /home/" + System.getProperty("user.name") + "/.torcs/config/raceman/quickrace.xml");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         IGenome genome;
         if (load == null) {
@@ -105,7 +106,7 @@ public class FuocoDriverAlgorithm implements Serializable {
         race.setTrack(track, road);
         race.laps = laps;
 
-        RaceResult[] results = race.runRace2(drivers, withGUI);
+        RaceResult[] results = race.runRace(drivers, withGUI);
 
         // RaceResult has many gets, getTime(), but also isFinished() and getDistance() ;)
         System.out.println(results[0].getTime());
