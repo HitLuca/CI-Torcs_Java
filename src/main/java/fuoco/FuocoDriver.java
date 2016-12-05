@@ -18,24 +18,24 @@ public class FuocoDriver extends AbstractDriver {
 
     public FuocoDriver() {
 //        this.enableExtras(new AutomatedClutch());
-//        this.enableExtras(new AutomatedGearbox());
 //        this.enableExtras(new AutomatedRecovering());
-//        this.enableExtras(new ABS());
     }
 
     @Override
     public void loadGenome(IGenome genome) {
         if (genome instanceof FuocoCoreGenome) {
-            try {
-                core = new FuocoCore();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+            core = new FuocoCore();
+            core.loadGenome(genome);
+            if (((FuocoCoreGenome) genome).getABS()) {
+                this.enableExtras(new ABS());
+            }
+            if (((FuocoCoreGenome) genome).getAutomatedGearbox()) {
+                this.enableExtras(new AutomatedGearbox());
             }
         } else {
             core = new DefaultCore();
+            core.loadGenome(genome);
         }
-
-        core.loadGenome(genome);
     }
 
     @Override
@@ -86,7 +86,6 @@ public class FuocoDriver extends AbstractDriver {
 //        System.out.println("Acceleration: " + action.accelerate);
 //        System.out.println("Brake: " + action.brake);
 //        System.out.println("-----------------------------------------------");
-
 
         return action;
     }

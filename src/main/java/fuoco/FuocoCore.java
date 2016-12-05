@@ -24,7 +24,15 @@ public class FuocoCore implements Core {
     private double last_rmp = 0;
     private int change_gear = 3;
 
-    public FuocoCore() throws FileNotFoundException {
+    private double[] steeringWeights;
+    private double[] accelBrakegWeights;
+
+    private boolean AutomatedGearbox;
+    private boolean min;
+    private double space_offset;
+    private double brake_force;
+
+    public FuocoCore() {
     }
 
     private ArrayList<INDArray> retrievePredictions(SensorModel sensors) {
@@ -33,8 +41,8 @@ public class FuocoCore implements Core {
         double[] accelBrake = new double[nets.length];
         for (int i = 0; i < nets.length; i++) {
             INDArray prediction = nets[i].output(sensors2INDArray(sensors));
-            steering[i] = prediction.getDouble(0);
-            accelBrake[i] = prediction.getDouble(1);
+            steering[i] = prediction.getDouble(0) * steeringWeights[i];
+            accelBrake[i] = prediction.getDouble(1) * accelBrakegWeights[i];
         }
 
         predictions.add(Nd4j.create(steering));
@@ -82,7 +90,11 @@ public class FuocoCore implements Core {
             }
             predicted = d / predictions.get(1).size(1);
         } else {
-            predicted = predictions.get(1).meanNumber().doubleValue();
+            if (min) {
+                predicted = predictions.get(1).minNumber().doubleValue();
+            } else {
+                predicted = predictions.get(1).meanNumber().doubleValue();
+            }
         }
 
         if (predicted >= 0) {
@@ -93,31 +105,46 @@ public class FuocoCore implements Core {
             action.brake = -predicted;
         }
 
-        if (change_gear < 3) {
-            last_rmp = 5000;
-            change_gear++;
-        } else {
-            change_gear = 0;
-            last_rmp = sensors.getRPM();
-        }
-
-        if(gear < 1) {
-            gear = 1;
-        } else if(gear < 6 && last_rmp >= (double)this.gearUp[gear - 1]) {
-            gear = gear + 1;
-        } else {
-            if(gear > 1 && last_rmp <= (double)this.gearDown[gear - 1]) {
-                gear = gear - 1;
+        if (!AutomatedGearbox) {
+            if (change_gear < 3) {
+                last_rmp = 5000;
+                change_gear++;
+            } else {
+                change_gear = 0;
+                last_rmp = sensors.getRPM();
             }
+
+            if(gear < 1) {
+                gear = 1;
+            } else if(gear < 6 && last_rmp >= (double)this.gearUp[gear - 1]) {
+                gear = gear + 1;
+            } else {
+                if(gear > 1 && last_rmp <= (double)this.gearDown[gear - 1]) {
+                    gear = gear - 1;
+                }
+            }
+
+            action.gear = gear;
         }
 
-        action.gear = gear;
+        double space = 0.000851898 * Math.pow(sensors.getSpeed(), 2) + 0.104532 * sensors.getSpeed() - 2.03841;
+
+        if (sensors.getTrackEdgeSensors()[9] < space + space_offset) {
+            action.accelerate = 0;
+            action.brake *= brake_force;
+        }
 
         return action;
     }
 
     public void loadGenome(IGenome genome) {
         nets = ((FuocoCoreGenome) genome).getNets();
+        steeringWeights = ((FuocoCoreGenome) genome).getSteeringWeights();
+        accelBrakegWeights = ((FuocoCoreGenome) genome).getAccelBrakegWeights();
+        AutomatedGearbox = ((FuocoCoreGenome) genome).getAutomatedGearbox();
+        min = ((FuocoCoreGenome) genome).getMin();
+        space_offset = ((FuocoCoreGenome) genome).getSpace_offset();
+        brake_force = ((FuocoCoreGenome) genome).getBrake_force();
     }
 
     public IGenome getGenome() throws IOException {

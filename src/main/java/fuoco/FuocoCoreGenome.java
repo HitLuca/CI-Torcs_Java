@@ -19,6 +19,15 @@ public class FuocoCoreGenome implements IGenome {
     private static final long serialVersionUID = 6534186543165341653L;
     private MultiLayerNetwork[] nets;
 
+    private double[] steeringWeights;
+    private double[] accelBrakegWeights;
+
+    private boolean ABS;
+    private boolean AutomatedGearbox;
+    private boolean min;
+    private double space_offset;
+    private double brake_force;
+
     private static INDArray read(File file) throws IOException {
         List<Double> l = new ArrayList<>();
         BufferedReader br = new BufferedReader(new FileReader(file));
@@ -33,7 +42,7 @@ public class FuocoCoreGenome implements IGenome {
         return Nd4j.create(r);
     }
 
-    FuocoCoreGenome(String path) throws Exception {
+    FuocoCoreGenome(String path, double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
 
         File dir = new File(path);
         File[] files = dir.listFiles();
@@ -42,8 +51,8 @@ public class FuocoCoreGenome implements IGenome {
 
         nets = new MultiLayerNetwork[files.length];
 
-        for (int i = 0; i < files.length; i++) {
-            nets[i] = new MultiLayerNetwork(new NeuralNetConfiguration.Builder()
+        for (int c = 0; c < files.length; c++) {
+            nets[c] = new MultiLayerNetwork(new NeuralNetConfiguration.Builder()
                     .list()
                     .layer(0, new DenseLayer.Builder()
                             .nIn(29)
@@ -62,12 +71,49 @@ public class FuocoCoreGenome implements IGenome {
                             .build())
                     .pretrain(false)
                     .build());
-            nets[i].init(read(files[i]), true);
+            nets[c].init(read(files[c]), true);
         }
+
+        this.steeringWeights = steeringWeights;
+        this.accelBrakegWeights = accelBrakegWeights;
+
+        this.ABS = ABS;
+        this.AutomatedGearbox = AutomatedGearbox;
+        this.min = min;
+        this.space_offset = space_offset;
+        this.brake_force = brake_force;
     }
 
     public MultiLayerNetwork[] getNets() {
         return nets;
+    }
+
+    public double[] getSteeringWeights() {
+        return steeringWeights;
+    }
+
+    public double[] getAccelBrakegWeights() {
+        return accelBrakegWeights;
+    }
+
+    public boolean getABS() {
+        return ABS;
+    }
+
+    public boolean getAutomatedGearbox() {
+        return AutomatedGearbox;
+    }
+
+    public boolean getMin() {
+        return min;
+    }
+
+    public double getSpace_offset() {
+        return space_offset;
+    }
+
+    public double getBrake_force() {
+        return brake_force;
     }
 }
 

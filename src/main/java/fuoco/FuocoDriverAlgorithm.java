@@ -2,6 +2,7 @@ package fuoco;
 
 import cicontest.algorithm.abstracts.DriversUtils;
 import cicontest.torcs.genome.IGenome;
+import cicontest.torcs.race.RaceResult;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -81,9 +82,9 @@ public class FuocoDriverAlgorithm implements Serializable {
     private void run(boolean withGUI, int laps, String track, String road, String load, String save) throws Exception {
         try {
             if (withGUI) {
-                Runtime.getRuntime().exec("torcs -t 40000");
+                Runtime.getRuntime().exec("torcs -t 80000");
             } else {
-                Runtime.getRuntime().exec("torcs -t 40000 -r /home/" + System.getProperty("user.name") + "/.torcs/config/raceman/quickrace.xml");
+                Runtime.getRuntime().exec("torcs -t 80000 -r /home/" + System.getProperty("user.name") + "/.torcs/config/raceman/quickrace.xml");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -93,7 +94,7 @@ public class FuocoDriverAlgorithm implements Serializable {
         if (load == null) {
             genome = new DefaultCoreGenome();
         } else {
-            genome = new FuocoCoreGenome("memory/" + load);
+            genome = new FuocoCoreGenome("memory/" + load, new double[]{1, 1, 1, 1}, new double[]{1, 1, 1, 1}, false, false, false, 15, 1.5);
         }
 
         IGenome[] drivers = new IGenome[1];
@@ -104,7 +105,10 @@ public class FuocoDriverAlgorithm implements Serializable {
         race.setTrack(track, road);
         race.laps = laps;
 
-        int[] results = race.runRace(drivers, withGUI);
+        RaceResult[] results = race.runRace2(drivers, withGUI);
+
+        // RaceResult has many gets, getTime(), but also isFinished() and getDistance() ;)
+        System.out.println(results[0].getTime());
 
         if (save != null) {
             DriversUtils.storeGenome(drivers[0], save);
