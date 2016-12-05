@@ -41,8 +41,8 @@ public class FuocoCore implements Core {
         double[] accelBrake = new double[nets.length];
         for (int i = 0; i < nets.length; i++) {
             INDArray prediction = nets[i].output(sensors2INDArray(sensors));
-            steering[i] = prediction.getDouble(0) * steeringWeights[i];
-            accelBrake[i] = prediction.getDouble(1) * accelBrakegWeights[i];
+            steering[i] = prediction.getDouble(0);
+            accelBrake[i] = prediction.getDouble(1);
         }
 
         predictions.add(Nd4j.create(steering));
@@ -75,7 +75,13 @@ public class FuocoCore implements Core {
 
         ArrayList<INDArray> predictions = retrievePredictions(sensors);
 
-        action.steering = predictions.get(0).meanNumber().doubleValue();
+        double weightedSteering = 0, weightedAccelBrake = 0;
+        for (int i = 0; i < nets.length; i++) {
+            weightedSteering += predictions.get(0).getDouble(i) * steeringWeights[i];
+            weightedAccelBrake += predictions.get(1).getDouble(i) * accelBrakegWeights[i];
+        }
+
+        action.steering = weightedSteering;
 
         double predicted;
 
@@ -93,7 +99,7 @@ public class FuocoCore implements Core {
             if (min) {
                 predicted = predictions.get(1).minNumber().doubleValue();
             } else {
-                predicted = predictions.get(1).meanNumber().doubleValue();
+                predicted = weightedAccelBrake;
             }
         }
 
@@ -132,6 +138,20 @@ public class FuocoCore implements Core {
         if (sensors.getTrackEdgeSensors()[9] < space + space_offset) {
             action.accelerate = 0;
             action.brake *= brake_force;
+        }
+
+        if (sensors.getSpeed() > 225) {
+            if (action.steering > 0) {
+                action.steering = Math.pow(action.steering, 4);
+            } else {
+                action.steering = -Math.pow(action.steering, 4);
+            }
+        } else if (sensors.getSpeed() > 150) {
+            if (action.steering > 0) {
+                action.steering = Math.pow(action.steering, 2);
+            } else {
+                action.steering = -Math.pow(action.steering, 2);
+            }
         }
 
         return action;
