@@ -13,6 +13,8 @@ import race.TorcsConfiguration;
 
 import java.io.File;
 
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.*;
 
@@ -38,7 +40,6 @@ public class FuocoDriverAlgorithm implements Serializable {
         trackDict.put("brondehach", "road");
         trackDict.put("corkscrew", "road");
         trackDict.put("eroad", "road");
-        trackDict.put("e-track-1", "road");
         trackDict.put("e-track-2", "road");
         trackDict.put("e-track-3", "road");
         trackDict.put("e-track-4", "road");
@@ -74,8 +75,7 @@ public class FuocoDriverAlgorithm implements Serializable {
 
     private static ArgumentParser configureParser() {
         ArgumentParser parser = ArgumentParsers.newArgumentParser("Train")
-                .defaultHelp(true)
-                .description("#TODO"); //TODO implement description
+                .defaultHelp(true);
 
         parser.addArgument("-g", "--gui")
                 .action(Arguments.storeTrue())
@@ -91,16 +91,6 @@ public class FuocoDriverAlgorithm implements Serializable {
                 .setDefault("b-speedway")
                 .help("Name of track");
 
-        parser.addArgument("-r", "--road")
-                .nargs(1)
-                .setDefault("oval")
-                .help("Type of road");
-
-        parser.addArgument("-o", "--open")
-                .help("Filename for loading genome");
-
-        parser.addArgument("-s", "--save")
-                .help("Filename for saving genome");
         return parser;
     }
 
@@ -120,20 +110,23 @@ public class FuocoDriverAlgorithm implements Serializable {
             String track = res.getString("track");
             track = track.substring(1).substring(0, track.length() - 2);
 
-            String road = res.getString("road");
-            road = road.substring(1).substring(0, road.length() - 2);
-
-            String load = res.getString("open");
-            String save = res.getString("save");
-
-
             FuocoDriverAlgorithm algorithm = new FuocoDriverAlgorithm();
             DriversUtils.registerMemory(FuocoDriver.class);
 
-            algorithm.sampleTracks(5);
-            algorithm.fitness(new double[]{1, 1, 1, 1}, new double[]{1, 1, 1, 1}, false, false, false, 15, 1.5);
+            File dir = new File("memory/nets");
+            File[] files = dir.listFiles();
 
-//            algorithm.run(withGUI, laps, track, road,  load, save);
+            assert files != null;
+
+            double[] s = new double[files.length], a = new double[files.length];
+            for (int i = 0; i < files.length; i++) {
+                s[i] = 1.0D / files.length;
+                a[i] = 1.0D / files.length;
+            }
+
+            algorithm.test(withGUI, laps, track, s, a, false, true, false, 15, 1.5);
+//            algorithm.testAllTracks(withGUI, laps, s, a, false, true, false, 15, 1.5);
+
         } catch (ArgumentParserException e) {
             e.printStackTrace();
         }
@@ -148,50 +141,41 @@ public class FuocoDriverAlgorithm implements Serializable {
         }
     }
 
+    private void testAllTracks(boolean withGUI, int laps, double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
+        SortedSet<String> allTracks = new TreeSet<>(trackDict.keySet());
+
+        for (String t : allTracks) {
+            test(withGUI, laps, t, steeringWeights, accelBrakegWeights, ABS, AutomatedGearbox, min, space_offset, brake_force);
+        }
+    }
+
+    private FuocoResults test (boolean withGUI, int laps, String track, double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
+
+        Logger.println(track);
+
+        IGenome[] drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", steeringWeights, accelBrakegWeights, ABS, AutomatedGearbox, min, space_offset, brake_force)};
+
+        FuocoRace race = new FuocoRace();
+
+        race.setTrack(track, trackDict.get(track));
+        race.laps = laps;
+        RaceResult r = race.runRace(drivers, withGUI)[0];
+
+        Logger.println(r.getTime());
+        Logger.println(((FuocoDriver) r.getDriver()).hasDamage() + "\n");
+
+        return new FuocoResults(r, ((FuocoDriver) r.getDriver()).hasDamage());
+    }
+
+
     private List<FuocoResults> fitness(double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
         List<FuocoResults> results = new ArrayList<>();
 
         for(String t : tracks) {
-//            System.out.println(t);
-            IGenome[] drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", steeringWeights, accelBrakegWeights, ABS, AutomatedGearbox, min, space_offset, brake_force)};
-
-            FuocoRace race = new FuocoRace();
-
-            race.setTrack(t, trackDict.get(t));
-            RaceResult r = race.runRace(drivers, false)[0];
-
-//            System.out.println(r.getTime());
-//            System.out.println(((FuocoDriver) r.getDriver()).hasDamage());
-
-            results.add(new FuocoResults(r, ((FuocoDriver) r.getDriver()).hasDamage()));
+            FuocoResults result = test(false, 1, t, steeringWeights, accelBrakegWeights, ABS, AutomatedGearbox, min, space_offset, brake_force);
+            results.add(result);
         }
         return results;
     }
 
-    private void run(boolean withGUI, int laps, String track, String road, String load, String save) throws Exception {
-
-        IGenome genome;
-        if (load == null) {
-            genome = new DefaultCoreGenome();
-        } else {
-            genome = new FuocoCoreGenome("memory/" + load, new double[]{1, 1, 1, 1}, new double[]{1, 1, 1, 1}, false, false, false, 15, 1.5);
-        }
-
-        IGenome[] drivers = new IGenome[1];
-        drivers[0] = genome;
-
-        FuocoRace race = new FuocoRace();
-
-        race.setTrack(track, road);
-        race.laps = laps;
-
-        RaceResult[] results = race.runRace(drivers, withGUI);
-
-        // RaceResult has many gets, getTime(), but also isFinished() and getDistance() ;)
-        System.out.println(results[0].getTime());
-
-        if (save != null) {
-            DriversUtils.storeGenome(drivers[0], save);
-        }
-    }
 }

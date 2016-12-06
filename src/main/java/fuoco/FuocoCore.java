@@ -83,7 +83,7 @@ public class FuocoCore implements Core {
 
         action.steering = weightedSteering;
 
-        double predicted;
+        double predicted, dpred;
 
         double d = 0;
         if (predictions.get(1).minNumber().doubleValue() < 0) {
@@ -120,13 +120,17 @@ public class FuocoCore implements Core {
                 last_rmp = sensors.getRPM();
             }
 
-            if(gear < 1) {
+            if (sensors.getSpeed() < 10) {
                 gear = 1;
-            } else if(gear < 6 && last_rmp >= (double)this.gearUp[gear - 1]) {
-                gear = gear + 1;
             } else {
-                if(gear > 1 && last_rmp <= (double)this.gearDown[gear - 1]) {
-                    gear = gear - 1;
+                if(gear < 1) {
+                    gear = 1;
+                } else if(gear < 6 && last_rmp >= (double)this.gearUp[gear - 1]) {
+                    gear = gear + 1;
+                } else {
+                    if(gear > 1 && last_rmp <= (double)this.gearDown[gear - 1]) {
+                        gear = gear - 1;
+                    }
                 }
             }
 
@@ -152,6 +156,10 @@ public class FuocoCore implements Core {
             } else {
                 action.steering = -Math.pow(action.steering, 2);
             }
+        }
+
+        if (sensors.getSpeed() > 130) {
+            action.accelerate = 0;
         }
 
         return action;
