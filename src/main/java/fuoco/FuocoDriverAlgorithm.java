@@ -166,16 +166,6 @@ public class FuocoDriverAlgorithm implements Serializable {
     }
 
 
-    private List<FuocoResults> fitness(double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
-    public void setTracks() {
-        tracks.clear();
-        // tracks.add("alpine-1");
-        // tracks.add("ole-road-1");
-        tracks.add("alpine-2");
-        tracks.add("b-speedway");
-        tracks.add("corkscrew");
-    }
-
     public List<FuocoResults> fitness(double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
         List<FuocoResults> results = new ArrayList<>();
 
