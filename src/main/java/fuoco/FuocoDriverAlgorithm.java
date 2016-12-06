@@ -17,8 +17,7 @@ import java.io.Serializable;
 import java.util.*;
 
 public class FuocoDriverAlgorithm implements Serializable {
-
-    class FuocoResults {
+    public class FuocoResults {
         public RaceResult res;
         public boolean damage;
 
@@ -31,7 +30,7 @@ public class FuocoDriverAlgorithm implements Serializable {
     Map<String, String> trackDict = new HashMap<>();
     Set<String> tracks = new HashSet<>();
 
-    private FuocoDriverAlgorithm() {
+    public FuocoDriverAlgorithm() {
         trackDict.put("aalborg", "road");
         trackDict.put("alpine-1", "road");
         trackDict.put("alpine-2", "road");
@@ -70,6 +69,8 @@ public class FuocoDriverAlgorithm implements Serializable {
         trackDict.put("dirt-6", "dirt");
         trackDict.put("mixed-1", "dirt");
         trackDict.put("mixed-2", "dirt");
+        TorcsConfiguration.getInstance().initialize(new File("torcs.properties"));
+        DriversUtils.registerMemory(FuocoDriver.class);
     }
 
     private static ArgumentParser configureParser() {
@@ -105,9 +106,6 @@ public class FuocoDriverAlgorithm implements Serializable {
     }
 
     public static void main(String[] args) throws Exception {
-
-        TorcsConfiguration.getInstance().initialize(new File("torcs.properties"));
-
         ArgumentParser parser = configureParser();
 
         try {
@@ -128,7 +126,6 @@ public class FuocoDriverAlgorithm implements Serializable {
 
 
             FuocoDriverAlgorithm algorithm = new FuocoDriverAlgorithm();
-            DriversUtils.registerMemory(FuocoDriver.class);
 
             algorithm.sampleTracks(5);
             algorithm.fitness(new double[]{1, 1, 1, 1}, new double[]{1, 1, 1, 1}, false, false, false, 15, 1.5);
@@ -139,7 +136,7 @@ public class FuocoDriverAlgorithm implements Serializable {
         }
     }
 
-    private void sampleTracks(int n) {
+    public void sampleTracks(int n) {
         List<String> allTracks = new ArrayList<>(trackDict.keySet());
         Collections.shuffle(allTracks);
         tracks.clear();
@@ -148,9 +145,17 @@ public class FuocoDriverAlgorithm implements Serializable {
         }
     }
 
-    private List<FuocoResults> fitness(double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
-        List<FuocoResults> results = new ArrayList<>();
+    public void setTracks() {
+        tracks.clear();
+        // tracks.add("alpine-1");
+        // tracks.add("ole-road-1");
+        tracks.add("alpine-2");
+        tracks.add("b-speedway");
+        tracks.add("corkscrew");
+    }
 
+    public List<FuocoResults> fitness(double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
+        List<FuocoResults> results = new ArrayList<>();
         for(String t : tracks) {
 //            System.out.println(t);
             IGenome[] drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", steeringWeights, accelBrakegWeights, ABS, AutomatedGearbox, min, space_offset, brake_force)};
@@ -160,7 +165,7 @@ public class FuocoDriverAlgorithm implements Serializable {
             race.setTrack(t, trackDict.get(t));
             RaceResult r = race.runRace(drivers, false)[0];
 
-//            System.out.println(r.getTime());
+            System.out.println(r.getTime());
 //            System.out.println(((FuocoDriver) r.getDriver()).hasDamage());
 
             results.add(new FuocoResults(r, ((FuocoDriver) r.getDriver()).hasDamage()));

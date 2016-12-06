@@ -71,7 +71,8 @@ public class FuocoCoreGenome implements IGenome {
                             .build())
                     .pretrain(false)
                     .build());
-            nets[c].init(read(files[c]), true);
+            INDArray array = read(files[c]);
+            nets[c].init(array, true);
         }
 
         this.steeringWeights = steeringWeights;
