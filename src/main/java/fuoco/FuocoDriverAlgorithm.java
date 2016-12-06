@@ -33,7 +33,7 @@ public class FuocoDriverAlgorithm implements Serializable {
     Map<String, String> trackDict = new HashMap<>();
     Set<String> tracks = new HashSet<>();
 
-    private FuocoDriverAlgorithm() {
+    public FuocoDriverAlgorithm() {
         trackDict.put("aalborg", "road");
         trackDict.put("alpine-1", "road");
         trackDict.put("alpine-2", "road");
@@ -71,6 +71,8 @@ public class FuocoDriverAlgorithm implements Serializable {
         trackDict.put("dirt-6", "dirt");
         trackDict.put("mixed-1", "dirt");
         trackDict.put("mixed-2", "dirt");
+        TorcsConfiguration.getInstance().initialize(new File("torcs.properties"));
+        DriversUtils.registerMemory(FuocoDriver.class);
     }
 
     private static ArgumentParser configureParser() {
@@ -95,9 +97,6 @@ public class FuocoDriverAlgorithm implements Serializable {
     }
 
     public static void main(String[] args) throws Exception {
-
-        TorcsConfiguration.getInstance().initialize(new File("torcs.properties"));
-
         ArgumentParser parser = configureParser();
 
         try {
@@ -111,7 +110,6 @@ public class FuocoDriverAlgorithm implements Serializable {
             track = track.substring(1).substring(0, track.length() - 2);
 
             FuocoDriverAlgorithm algorithm = new FuocoDriverAlgorithm();
-            DriversUtils.registerMemory(FuocoDriver.class);
 
             File dir = new File("memory/nets");
             File[] files = dir.listFiles();
@@ -132,7 +130,7 @@ public class FuocoDriverAlgorithm implements Serializable {
         }
     }
 
-    private void sampleTracks(int n) {
+    public void sampleTracks(int n) {
         List<String> allTracks = new ArrayList<>(trackDict.keySet());
         Collections.shuffle(allTracks);
         tracks.clear();
@@ -169,6 +167,16 @@ public class FuocoDriverAlgorithm implements Serializable {
 
 
     private List<FuocoResults> fitness(double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
+    public void setTracks() {
+        tracks.clear();
+        // tracks.add("alpine-1");
+        // tracks.add("ole-road-1");
+        tracks.add("alpine-2");
+        tracks.add("b-speedway");
+        tracks.add("corkscrew");
+    }
+
+    public List<FuocoResults> fitness(double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
         List<FuocoResults> results = new ArrayList<>();
 
         for(String t : tracks) {
@@ -176,6 +184,15 @@ public class FuocoDriverAlgorithm implements Serializable {
             results.add(result);
         }
         return results;
+    }
+
+    public void setTracks() {
+        tracks.clear();
+        // tracks.add("alpine-1");
+        // tracks.add("ole-road-1");
+        tracks.add("alpine-2");
+        tracks.add("b-speedway");
+        tracks.add("corkscrew");
     }
 
 }
