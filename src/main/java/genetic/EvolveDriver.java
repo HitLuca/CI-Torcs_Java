@@ -31,7 +31,7 @@ public class EvolveDriver {
         algorithm = new FuocoDriverAlgorithm();
         algorithm.setTracks();
         setupGeneticAlgorithm(algorithm);
-        Individual result = engine.evolve(10, 1, new Stagnation(10, false));
+        Individual result = engine.evolve(10, 1, new Stagnation(15, false));
 
         System.setOut(stdout);
         System.out.println();

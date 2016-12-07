@@ -11,27 +11,26 @@ public class Individual {
     private boolean evaluated = false;
 
     private int minOffset = 0;
-    private int maxOffset = 100;
-    private float minMulFactor = 0;
+    private int maxOffset = 80;
+    private float minMulFactor = 1;
     private float maxMulFactor = 2;
 
     private List<Object> genome;
 
-    private int networksNumber = 4; // TODO get it to be a parameter
+    private int networksNumber = 5; // TODO get it to be a parameter
 
     public Individual() {
         genome = new ArrayList<>();
-        int max = 2 * networksNumber + 5;
 
         for (int i = 0; i < 2 * networksNumber; i++) {
             genome.add(0.0);
         }
-        genome.add(false); // Automatic gear
-        genome.add(false); // ABS
-        genome.add(false); // Use min on acceleration calculation (otherwise mean)
+//         genome.add(false); // Automatic gear
+//         genome.add(false); // ABS
+//        genome.add(false); // Use min on acceleration calculation (otherwise mean)
 
-        genome.add(0);
-        genome.add(0f);
+        genome.add(0); // Offset
+        genome.add(0f); // Brake multiplicative factor
     }
 
     public Individual(Random rng) {
@@ -43,12 +42,12 @@ public class Individual {
         genome.addAll(steeringWeights); // Steering weights
         genome.addAll(accelerationWeights); // Acceleration weights
 
-        genome.add(rng.nextBoolean()); // Automatic gear
-        genome.add(rng.nextBoolean()); // ABS
-        genome.add(rng.nextBoolean()); // Use min on acceleration calculation (otherwise mean)
+//        genome.add(rng.nextBoolean()); // Automatic gear
+//        genome.add(rng.nextBoolean()); // ABS
+//        genome.add(rng.nextBoolean()); // Use min on acceleration calculation (otherwise mean)
 
-        genome.add(rng.nextInt(maxOffset - minOffset) + minOffset);
-        genome.add(rng.nextFloat() * (maxMulFactor - minMulFactor) + minMulFactor);
+        genome.add(rng.nextInt(maxOffset - minOffset) + minOffset); // Offset
+        genome.add(rng.nextFloat() * (maxMulFactor - minMulFactor) + minMulFactor); // Brake multiplicative factor
         normalizeNetworkWeights();
     }
 
@@ -193,25 +192,25 @@ public class Individual {
         return accelerationWeights;
     }
 
-    public boolean getAutomaticGear() {
-        return (boolean) genome.get(2 * networksNumber);
-    }
+//    public boolean getAutomaticGear() {
+//        return (boolean) genome.get(2 * networksNumber);
+//    }
 
-    public boolean getABS() {
-        return (boolean) genome.get(2 * networksNumber + 1);
-    }
+//    public boolean getABS() {
+//        return (boolean) genome.get(2 * networksNumber + 1);
+//    }
 
     public int getOffset() {
-        return (int) genome.get(2 * networksNumber + 3);
+        return (int) genome.get(2 * networksNumber);
     }
 
     public float getMultFactor() {
-        return (float) genome.get(2 * networksNumber + 4);
+        return (float) genome.get(2 * networksNumber + 1);
     }
 
-    public boolean getMin() {
-        return (boolean) genome.get(2 * networksNumber + 2);
-    }
+//    public boolean getMin() {
+//        return (boolean) genome.get(2 * networksNumber + 2);
+//    }
 
     public boolean isEvaluated() {
         return evaluated;

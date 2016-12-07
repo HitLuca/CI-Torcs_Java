@@ -20,7 +20,7 @@ import java.util.*;
 
 public class FuocoDriverAlgorithm implements Serializable {
 
-    class FuocoResults {
+    public class FuocoResults {
         public RaceResult res;
         public boolean damage;
 
@@ -122,8 +122,13 @@ public class FuocoDriverAlgorithm implements Serializable {
                 a[i] = 1.0D / files.length;
             }
 
-            algorithm.test(withGUI, laps, track, s, a, false, true, false, 15, 1.5);
-//            algorithm.testAllTracks(withGUI, laps, s, a, false, true, false, 15, 1.5);
+//            s[0] = 0.22D;
+//            s[1] = 0.22D;
+//            s[2] = 0.33D;
+//            s[3] = 0.22D;
+
+//            algorithm.test(withGUI, laps, track, s, a, false, true, false, 15, 1.5);
+            algorithm.testAllTracks(withGUI, laps, s, a, false, true, false, 15, 1.5);
 
         } catch (ArgumentParserException e) {
             e.printStackTrace();
@@ -141,10 +146,23 @@ public class FuocoDriverAlgorithm implements Serializable {
 
     private void testAllTracks(boolean withGUI, int laps, double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
         SortedSet<String> allTracks = new TreeSet<>(trackDict.keySet());
+        double totalTime = 0D;
+        int totalFails = 0;
+        double failedTimes = 0D;
 
         for (String t : allTracks) {
-            test(withGUI, laps, t, steeringWeights, accelBrakegWeights, ABS, AutomatedGearbox, min, space_offset, brake_force);
+            FuocoResults result = test(withGUI, laps, t, steeringWeights, accelBrakegWeights, ABS, AutomatedGearbox, min, space_offset, brake_force);
+            if (!result.damage || t == "g-track-3" || t=="ole-road-1") {
+                totalTime += result.res.getTime();
+            } else {
+                totalFails += 1;
+                failedTimes += result.res.getTime();
+            }
         }
+        Logger.println(totalTime);
+        Logger.println(totalFails);
+        Logger.println(failedTimes);
+
     }
 
     private FuocoResults test (boolean withGUI, int laps, String track, double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
@@ -178,11 +196,12 @@ public class FuocoDriverAlgorithm implements Serializable {
 
     public void setTracks() {
         tracks.clear();
-        // tracks.add("alpine-1");
-        // tracks.add("ole-road-1");
+        tracks.add("alpine-1");
         tracks.add("alpine-2");
         tracks.add("b-speedway");
         tracks.add("corkscrew");
+        tracks.add("aalborg");
+        tracks.add("e-track-4");
     }
 
 }
