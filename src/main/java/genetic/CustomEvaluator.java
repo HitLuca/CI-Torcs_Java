@@ -32,19 +32,12 @@ public class CustomEvaluator implements FitnessEvaluator<Individual> {
         if (!candidate.isEvaluated()) {
             double fitness = 0;
 
-            double[] steeringWeights = candidate.getSteeringWeights();
-            double[] accelerationWeights = candidate.getAccelerationWeights();
-
-//            boolean automaticGear = candidate.getAutomaticGear();
-//            boolean ABS = candidate.getABS();
-//            boolean min = candidate.getMin();
-
             int offset = candidate.getOffset();
             float multFactor = candidate.getMultFactor();
 
             List<FuocoDriverAlgorithm.FuocoResults> results = null;
             try {
-                results = algorithm.fitness(steeringWeights, accelerationWeights, false, true, false, offset, multFactor);
+                results = algorithm.fitness(offset, multFactor);
             } catch (Exception e) {
                 e.printStackTrace();
             }

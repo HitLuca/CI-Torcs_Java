@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.text.DecimalFormat;
 import java.util.*;
 
 public class FuocoDriverAlgorithm implements Serializable {
@@ -79,6 +80,10 @@ public class FuocoDriverAlgorithm implements Serializable {
         ArgumentParser parser = ArgumentParsers.newArgumentParser("Train")
                 .defaultHelp(true);
 
+        parser.addArgument("-a", "--all")
+                .action(Arguments.storeTrue())
+                .help("Test on all tracks");
+
         parser.addArgument("-g", "--gui")
                 .action(Arguments.storeTrue())
                 .help("Specify wheather run TORCS with GUI");
@@ -97,62 +102,59 @@ public class FuocoDriverAlgorithm implements Serializable {
     }
 
     public static void main(String[] args) throws Exception {
+        FuocoDriverAlgorithm algorithm = new FuocoDriverAlgorithm();
+        Logger.init();
+
         ArgumentParser parser = configureParser();
+        Namespace res;
+        boolean withGUI = false;
+        String laps_string = "";
+        boolean allTracks = false;
+        String track = "";
 
         try {
-            Namespace res = parser.parseArgs(args);
-            boolean withGUI = res.getBoolean("gui");
-
-            String laps_string = res.getString("laps");
-            int laps = Integer.parseInt(laps_string.substring(1).substring(0, laps_string.length() - 2));
-
-            String track = res.getString("track");
-            track = track.substring(1).substring(0, track.length() - 2);
-
-            FuocoDriverAlgorithm algorithm = new FuocoDriverAlgorithm();
-
-            File dir = new File("memory/nets");
-            File[] files = dir.listFiles();
-
-            assert files != null;
-
-            double[] s = new double[files.length], a = new double[files.length];
-            for (int i = 0; i < files.length; i++) {
-                s[i] = 1.0D / files.length;
-                a[i] = 1.0D / files.length;
-            }
-
-//            s[0] = 0.22D;
-//            s[1] = 0.22D;
-//            s[2] = 0.33D;
-//            s[3] = 0.22D;
-
-//            algorithm.test(withGUI, laps, track, s, a, false, true, false, 15, 1.5);
-            algorithm.testAllTracks(withGUI, laps, s, a, false, true, false, 15, 1.5);
-
+            res = parser.parseArgs(args);
+            withGUI = res.getBoolean("gui");
+            laps_string = res.getString("laps");
+            allTracks = res.getBoolean("all");
+            track = res.getString("track");
         } catch (ArgumentParserException e) {
             e.printStackTrace();
         }
-    }
 
-    public void sampleTracks(int n) {
-        List<String> allTracks = new ArrayList<>(trackDict.keySet());
-        Collections.shuffle(allTracks);
-        tracks.clear();
-        for (int i = 0; i < n; i++) {
-            tracks.add(allTracks.get(i));
+        int laps = Integer.parseInt(laps_string.substring(1).substring(0, laps_string.length() - 2));
+        track = track.substring(1).substring(0, track.length() - 2);
+
+        if (allTracks) {
+            algorithm.testAllTracks(withGUI, laps, 13, 1.670994);
+        } else {
+            algorithm.runRace(withGUI, laps, track, 13, 1.670994);
         }
     }
 
-    private void testAllTracks(boolean withGUI, int laps, double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
+    private void testAllTracks(boolean withGUI, int laps, double space_offset, double brake_force) throws Exception {
         SortedSet<String> allTracks = new TreeSet<>(trackDict.keySet());
+        DecimalFormat df = new DecimalFormat("#.0000");
+
         double totalTime = 0D;
         int totalFails = 0;
         double failedTimes = 0D;
 
         for (String t : allTracks) {
-            FuocoResults result = test(withGUI, laps, t, steeringWeights, accelBrakegWeights, ABS, AutomatedGearbox, min, space_offset, brake_force);
-            if (!result.damage || t == "g-track-3" || t=="ole-road-1") {
+            FuocoResults result = runRace(withGUI, laps, t, space_offset, brake_force);
+
+            boolean damage = result.damage;
+            double time = Double.parseDouble(df.format(result.res.getTime()));
+
+            if (t.equals("g-track-3") || t.equals("ole-road-1")) {
+                damage = false;
+            }
+
+            Logger.println(t);
+            Logger.println(time);
+            Logger.println(damage + "\n");
+
+            if (!damage) {
                 totalTime += result.res.getTime();
             } else {
                 totalFails += 1;
@@ -162,33 +164,25 @@ public class FuocoDriverAlgorithm implements Serializable {
         Logger.println(totalTime);
         Logger.println(totalFails);
         Logger.println(failedTimes);
-
     }
 
-    private FuocoResults test (boolean withGUI, int laps, String track, double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
-
-        Logger.println(track);
-
-        IGenome[] drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", steeringWeights, accelBrakegWeights, ABS, AutomatedGearbox, min, space_offset, brake_force)};
+    private FuocoResults runRace (boolean withGUI, int laps, String track, double space_offset, double brake_force) throws Exception {
+        IGenome[] drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", space_offset, brake_force)};
 
         FuocoRace race = new FuocoRace();
-
         race.setTrack(track, trackDict.get(track));
         race.laps = laps;
         RaceResult r = race.runRace(drivers, withGUI)[0];
+        boolean damage = ((FuocoDriver) r.getDriver()).hasDamage();
 
-        Logger.println(r.getTime());
-        Logger.println(((FuocoDriver) r.getDriver()).hasDamage() + "\n");
-
-        return new FuocoResults(r, ((FuocoDriver) r.getDriver()).hasDamage());
+        return new FuocoResults(r, damage);
     }
 
-
-    public List<FuocoResults> fitness(double[] steeringWeights, double[] accelBrakegWeights, boolean ABS, boolean AutomatedGearbox, boolean min, double space_offset, double brake_force) throws Exception {
+    public List<FuocoResults> fitness(double space_offset, double brake_force) throws Exception {
         List<FuocoResults> results = new ArrayList<>();
 
         for(String t : tracks) {
-            FuocoResults result = test(false, 1, t, steeringWeights, accelBrakegWeights, ABS, AutomatedGearbox, min, space_offset, brake_force);
+            FuocoResults result = runRace(false, 1, t, space_offset, brake_force);
             results.add(result);
         }
         return results;

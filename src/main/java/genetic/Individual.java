@@ -17,64 +17,19 @@ public class Individual {
 
     private List<Object> genome;
 
-    private int networksNumber = 5; // TODO get it to be a parameter
 
     public Individual() {
         genome = new ArrayList<>();
-
-        for (int i = 0; i < 2 * networksNumber; i++) {
-            genome.add(0.0);
-        }
-//         genome.add(false); // Automatic gear
-//         genome.add(false); // ABS
-//        genome.add(false); // Use min on acceleration calculation (otherwise mean)
 
         genome.add(0); // Offset
         genome.add(0f); // Brake multiplicative factor
     }
 
     public Individual(Random rng) {
-        List<Object> steeringWeights = createNetworkWeights(rng, networksNumber);
-        List<Object> accelerationWeights = createNetworkWeights(rng, networksNumber);
-
         genome = new ArrayList<>();
-
-        genome.addAll(steeringWeights); // Steering weights
-        genome.addAll(accelerationWeights); // Acceleration weights
-
-//        genome.add(rng.nextBoolean()); // Automatic gear
-//        genome.add(rng.nextBoolean()); // ABS
-//        genome.add(rng.nextBoolean()); // Use min on acceleration calculation (otherwise mean)
 
         genome.add(rng.nextInt(maxOffset - minOffset) + minOffset); // Offset
         genome.add(rng.nextFloat() * (maxMulFactor - minMulFactor) + minMulFactor); // Brake multiplicative factor
-        normalizeNetworkWeights();
-    }
-
-    private List<Object> createNetworkWeights(Random rng, int networksNumber) {
-        double[] weights = new double[networksNumber];
-        List<Object> elements = new ArrayList<>();
-
-        double min = 1;
-        double max = 0;
-
-        for (int i=0; i<networksNumber; i++) {
-            double weight = rng.nextDouble();
-            if (weight > max) {
-                max = weight;
-            }
-            if (weight < min) {
-                min = weight;
-            }
-            weights[i] = weight;
-        }
-
-        for (int i=0; i<networksNumber; i++) {
-            weights[i] = (weights[i] - min) / (max-min);
-            elements.add(weights[i]);
-        }
-
-        return elements;
     }
 
     public double getFitness() {
@@ -119,38 +74,7 @@ public class Individual {
         } else {
             System.out.println("Not implemented...");
         }
-        normalizeNetworkWeights();
         evaluated = false;
-    }
-
-    private void normalizeNetworkWeights() {
-        normalizeWeights(0);
-        normalizeWeights(networksNumber);
-    }
-
-    private void normalizeWeights(int index) {
-        double sum = 0;
-
-        for (int i=0; i<networksNumber; i++) {
-            sum += (double) genome.get(i+index);
-        }
-
-        if (sum == 0) {
-            sum = 1;
-        }
-
-        for (int i=0; i<networksNumber; i++) {
-            double newValue = (double)genome.get(i+index)/ sum;
-            if (Double.isNaN(newValue)) {
-                System.err.println("Nan encountered");
-                System.err.println(newValue);
-                System.err.println(sum);
-                for (int j=0; j<networksNumber; j++) {
-                    System.err.println(genome.get(j+index));
-                }
-            }
-            genome.set(i+index, newValue);
-        }
     }
 
     public int getGenomeLength() {
@@ -165,7 +89,6 @@ public class Individual {
         for (int i = start; i < end; i++) {
             genome.set(i, data.get(i));
         }
-        normalizeNetworkWeights();
         evaluated = false;
     }
 
@@ -174,43 +97,14 @@ public class Individual {
         this.evaluated = true;
     }
 
-    public double[] getSteeringWeights() {
-        double[] steeringWeights = new double[networksNumber];
-        for (int i=0; i<networksNumber; i++) {
-            steeringWeights[i] = (double) genome.get(i);
-        }
-        return steeringWeights;
-    }
-
-    public double[] getAccelerationWeights() {
-        double[] accelerationWeights = new double[networksNumber];
-        int offset = networksNumber;
-
-        for (int i=0; i<networksNumber; i++) {
-            accelerationWeights[i] = (double) genome.get(i + offset);
-        }
-        return accelerationWeights;
-    }
-
-//    public boolean getAutomaticGear() {
-//        return (boolean) genome.get(2 * networksNumber);
-//    }
-
-//    public boolean getABS() {
-//        return (boolean) genome.get(2 * networksNumber + 1);
-//    }
-
     public int getOffset() {
-        return (int) genome.get(2 * networksNumber);
+        return (int) genome.get(0);
     }
 
     public float getMultFactor() {
-        return (float) genome.get(2 * networksNumber + 1);
+        return (float) genome.get(1);
     }
 
-//    public boolean getMin() {
-//        return (boolean) genome.get(2 * networksNumber + 2);
-//    }
 
     public boolean isEvaluated() {
         return evaluated;

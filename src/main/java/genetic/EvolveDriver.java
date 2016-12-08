@@ -44,7 +44,7 @@ public class EvolveDriver {
         CandidateFactory<Individual> candidateFactory = new ArrayFactory();
 
         List<EvolutionaryOperator<Individual>> operators = new ArrayList<>(2);
-        operators.add(new IndividualCrossover(4));
+        operators.add(new IndividualCrossover(1));
         operators.add(new IndividualMutation(new Probability(0.1), new Probability(0.1)));
 
         EvolutionaryOperator<Individual> evolutionaryOperator = new EvolutionPipeline<>(operators);

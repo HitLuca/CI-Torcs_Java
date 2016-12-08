@@ -54,30 +54,9 @@ public class EvolutionLogger implements EvolutionObserver<Individual> {
 
         Individual best = data.getBestCandidate();
 
-        double[] steeringWeights = best.getSteeringWeights();
-        double[] accelerationWeights = best.getAccelerationWeights();
-
-//        boolean automaticGear = best.getAutomaticGear();
-//        boolean ABS = best.getABS();
-//        boolean min = best.getMin();
-
         int offset = best.getOffset();
         float multFactor = best.getMultFactor();
 
-        out.println("Steering weights");
-        for (int i=0; i<steeringWeights.length; i++) {
-            out.println(steeringWeights[i]);
-        }
-        out.println("Acceleration weights");
-        for (int i=0; i<accelerationWeights.length; i++) {
-            out.println(accelerationWeights[i]);
-        }
-//        out.println("Automatic gear");
-//        out.println(automaticGear);
-//        out.println("ABS");
-//        out.println(ABS);
-//        out.println("Min");
-//        out.println(min);
         out.println("Offset");
         out.println(offset);
         out.println("Mult factor");
