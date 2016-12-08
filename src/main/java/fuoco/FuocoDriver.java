@@ -79,9 +79,7 @@ public class FuocoDriver extends AbstractDriver {
 
     @Override
     public Action defaultControl(Action action, SensorModel sensors) {
-
         action = this.core.computeAction(sensors);
-
         hasDamage = sensors.getDamage() > 0;
         return action;
     }

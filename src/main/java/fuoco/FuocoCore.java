@@ -1,84 +1,84 @@
 package fuoco;
 
-import cicontest.algorithm.abstracts.DriversUtils;
 import cicontest.torcs.genome.IGenome;
-import com.sun.org.apache.bcel.internal.generic.FADD;
-import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.factory.Nd4j;
+//import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+//import org.nd4j.linalg.api.ndarray.INDArray;
+//import org.nd4j.linalg.factory.Nd4j;
 import scr.Action;
 import scr.SensorModel;
 
 import java.io.*;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-
-import static org.nd4j.linalg.api.ndarray.INDArray.*;
-
 
 public class FuocoCore implements Core {
 
-    private MultiLayerNetwork[] nets;
+//    private MultiLayerNetwork[] nets;
+    private NeuralNet[] nets;
     private double space_offset;
     private double brake_force;
 
-    private ArrayList<INDArray> retrievePredictions(SensorModel sensors) {
-        ArrayList<INDArray> predictions = new ArrayList<>(2);
-        double[] steering = new double[nets.length];
-        double[] accelBrake = new double[nets.length];
+    private Matrix input = new Matrix(new double[29][1]);
+    private double[] steering;
+    private double[] accelBrake;
+
+    private void retrievePredictions(SensorModel sensors) {
+        sensors2INDArray(sensors);
         for (int i = 0; i < nets.length; i++) {
-            INDArray prediction = nets[i].output(sensors2INDArray(sensors));
-            steering[i] = prediction.getDouble(0);
-            accelBrake[i] = prediction.getDouble(1);
+            Matrix prediction = nets[i].predict(input);
+            steering[i] = prediction.values[0][0];
+            accelBrake[i] = prediction.values[1][0];
         }
-
-        predictions.add(Nd4j.create(steering));
-        predictions.add(Nd4j.create(accelBrake));
-
-        return predictions;
     }
 
-    private INDArray sensors2INDArray(SensorModel sensors) {
-        double[] d = new double[29];
-
-        d[0] = sensors.getAngleToTrackAxis()/Math.PI;
+    private void sensors2INDArray(SensorModel sensors) {
+        input.values[0][0] = sensors.getAngleToTrackAxis()/Math.PI;
         for (int i = 1; i < 20; i++) {
-            d[i] = sensors.getTrackEdgeSensors()[i - 1]/200.0;
+            input.values[i][0] = sensors.getTrackEdgeSensors()[i - 1]/200.0;
         }
-        d[20] = sensors.getTrackPosition();
-        d[21] = sensors.getSpeed()/300.0;
-        d[22] = sensors.getLateralSpeed()/300.0;
-        d[23] = sensors.getZSpeed()/300.0;
+        input.values[20][0] = sensors.getTrackPosition();
+        input.values[21][0] = sensors.getSpeed()/300.0;
+        input.values[22][0] = sensors.getLateralSpeed()/300.0;
+        input.values[23][0] = sensors.getZSpeed()/300.0;
         for (int i = 24; i < 28; i++) {
-            d[i] = sensors.getWheelSpinVelocity()[i - 24]/100.0;
+            input.values[i][0] = sensors.getWheelSpinVelocity()[i - 24]/100.0;
         }
-        d[28] = sensors.getRPM()/10000.0;
-
-        return Nd4j.create(d);
+        input.values[28][0] = sensors.getRPM()/10000.0;
     }
 
     public Action computeAction(SensorModel sensors) {
         Action action = new Action();
 
-        ArrayList<INDArray> predictions = retrievePredictions(sensors);
+        retrievePredictions(sensors);
 
-        double meanSteering = predictions.get(0).meanNumber().doubleValue();
-        double meanAccelBrake = predictions.get(1).meanNumber().doubleValue();
+        double meanSteering = 0;
+        for (int i = 0; i < nets.length; i++) {
+            meanSteering += steering[i];
+        }
+        meanSteering /= nets.length;
+
+        double meanAccelBrake = 0;
+        double accelBrakeMin = Double.MAX_VALUE;
+        for (int i = 0; i < nets.length; i++) {
+            meanAccelBrake += accelBrake[i];
+            if (accelBrakeMin > accelBrake[i]) {
+                accelBrakeMin = accelBrake[i];
+            }
+        }
+        meanAccelBrake /= nets.length;
 
         action.steering = meanSteering;
 
         double predicted;
 
         double d = 0;
-        if (predictions.get(1).minNumber().doubleValue() < 0) {
-            for (int i = 0; i < predictions.get(0).size(1); i++) {
-                if (predictions.get(1).getDouble(i) > 0) {
-                    d += predictions.get(1).getDouble(i) * 0.1;
+        if (accelBrakeMin < 0) {
+            for (int i = 0; i < accelBrake.length; i++) {
+                if (accelBrake[i] > 0) {
+                    d += accelBrake[i] * 0.1;
                 } else {
-                    d += predictions.get(1).getDouble(i) * 2;
+                    d += accelBrake[i] * 2;
                 }
             }
-            predicted = d / predictions.get(1).size(1);
+            predicted = d / accelBrake.length;
         } else {
             predicted = meanAccelBrake;
         }
@@ -124,6 +124,9 @@ public class FuocoCore implements Core {
         nets = ((FuocoCoreGenome) genome).getNets();
         space_offset = ((FuocoCoreGenome) genome).getSpace_offset();
         brake_force = ((FuocoCoreGenome) genome).getBrake_force();
+
+        steering = new double[nets.length];
+        accelBrake = new double[nets.length];
     }
 
     public IGenome getGenome() throws IOException {

@@ -103,7 +103,7 @@ public class FuocoDriverAlgorithm implements Serializable {
 
     public static void main(String[] args) throws Exception {
         FuocoDriverAlgorithm algorithm = new FuocoDriverAlgorithm();
-        Logger.init();
+//        Logger.init();
 
         ArgumentParser parser = configureParser();
         Namespace res;
