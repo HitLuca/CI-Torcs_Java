@@ -1,24 +1,18 @@
 package fuoco;
 
+import cicontest.algorithm.abstracts.AbstractAlgorithm;
 import cicontest.algorithm.abstracts.DriversUtils;
 import cicontest.torcs.genome.IGenome;
 import cicontest.torcs.race.RaceResult;
-import net.sourceforge.argparse4j.ArgumentParsers;
-import net.sourceforge.argparse4j.impl.Arguments;
-import net.sourceforge.argparse4j.inf.ArgumentParser;
-import net.sourceforge.argparse4j.inf.ArgumentParserException;
-import net.sourceforge.argparse4j.inf.Namespace;
 
 import race.TorcsConfiguration;
 
 import java.io.File;
 
-import java.io.FileNotFoundException;
-import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.*;
 
-public class FuocoDriverAlgorithm implements Serializable {
+public class FuocoDriverAlgorithm extends AbstractAlgorithm {
 
     public class FuocoResults {
         public RaceResult res;
@@ -75,64 +69,63 @@ public class FuocoDriverAlgorithm implements Serializable {
         DriversUtils.registerMemory(FuocoDriver.class);
     }
 
-    private static ArgumentParser configureParser() {
-        ArgumentParser parser = ArgumentParsers.newArgumentParser("Train")
-                .defaultHelp(true);
+    @Override
+    public void run(boolean b) {
 
-        parser.addArgument("-g", "--gui")
-                .action(Arguments.storeTrue())
-                .help("Specify wheather run TORCS with GUI");
+        File dir = new File("memory/nets");
+        File[] files = dir.listFiles();
 
-        parser.addArgument("-l", "--laps")
-                .nargs(1)
-                .setDefault("[1]")
-                .help("Number of laps");
+        double[] s = new double[files.length], a = new double[files.length];
+        for (int i = 0; i < files.length; i++) {
+            s[i] = 1.0D / files.length;
+            a[i] = 1.0D / files.length;
+        }
 
-        parser.addArgument("-t", "--track")
-                .nargs(1)
-                .setDefault("b-speedway")
-                .help("Name of track");
+        IGenome[] drivers = new IGenome[0];
+        try {
+            drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", s, a, false, true, false, 15, 1.5)};
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-        return parser;
+
+        FuocoRace race = new FuocoRace();
+        race.setTrack("aalborg" , "road");
+        race.laps = 1;
+
+        RaceResult r = race.runRace(drivers, true)[0];
+
+        Logger.println(r.getTime());
+        Logger.println(((FuocoDriver) r.getDriver()).hasDamage() + "\n");
     }
 
+
     public static void main(String[] args) throws Exception {
-        ArgumentParser parser = configureParser();
+		/*
+		 *
+		 * Start without arguments to run the algorithm
+		 * Start with -continue to continue a previous run
+		 * Start with -show to show the best found
+		 * Start with -show-race to show a race with 10 copies of the best found
+		 * Start with -human to race against the best found
+		 *
+		 */
+;
+        int laps = 3;
 
-        try {
-            Namespace res = parser.parseArgs(args);
-            boolean withGUI = res.getBoolean("gui");
+        String track = "alpine-1";
 
-            String laps_string = res.getString("laps");
-            int laps = Integer.parseInt(laps_string.substring(1).substring(0, laps_string.length() - 2));
+        FuocoDriverAlgorithm algorithm = new FuocoDriverAlgorithm();
 
-            String track = res.getString("track");
-            track = track.substring(1).substring(0, track.length() - 2);
 
-            FuocoDriverAlgorithm algorithm = new FuocoDriverAlgorithm();
-
-            File dir = new File("memory/nets");
-            File[] files = dir.listFiles();
-
-            assert files != null;
-
-            double[] s = new double[files.length], a = new double[files.length];
-            for (int i = 0; i < files.length; i++) {
-                s[i] = 1.0D / files.length;
-                a[i] = 1.0D / files.length;
-            }
 
 //            s[0] = 0.22D;
 //            s[1] = 0.22D;
 //            s[2] = 0.33D;
 //            s[3] = 0.22D;
+         algorithm.run();
+        //algorithm.testAllTracks(withGUI, laps, s, a, false, true, false, 15, 1.5);
 
-//            algorithm.test(withGUI, laps, track, s, a, false, true, false, 15, 1.5);
-            algorithm.testAllTracks(withGUI, laps, s, a, false, true, false, 15, 1.5);
-
-        } catch (ArgumentParserException e) {
-            e.printStackTrace();
-        }
     }
 
     public void sampleTracks(int n) {

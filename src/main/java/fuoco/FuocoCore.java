@@ -158,7 +158,7 @@ public class FuocoCore implements Core {
             }
         }
 
-        if (sensors.getSpeed() < 10) {
+        if (sensors.getSpeed() < 5) {
             action.accelerate = 1D;
             action.brake = 0D;
         }
@@ -166,9 +166,9 @@ public class FuocoCore implements Core {
 //        Logger.println(sensors.getSpeed());
 //        Logger.println("");
 
-//        if (sensors.getSpeed() > 170) {
-//            action.accelerate = 0;
-//        }
+        if (sensors.getSpeed() > 50) {
+            action.accelerate = 0;
+        }
 
         return action;
     }
