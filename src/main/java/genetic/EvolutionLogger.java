@@ -1,11 +1,12 @@
 package genetic;
+
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
-import fuoco.FuocoDriverAlgorithm;
 import org.uncommons.watchmaker.framework.EvolutionObserver;
 import org.uncommons.watchmaker.framework.PopulationData;
+
 /**
  * Created by luca on 12/5/16.
  */
@@ -28,7 +29,7 @@ public class EvolutionLogger implements EvolutionObserver<Individual> {
         System.setOut(fakeout);
 
         try {
-            out = new PrintWriter("evolved_parameters.txt");
+            out = new PrintWriter("genetic_output/evolved_parameters.txt");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
