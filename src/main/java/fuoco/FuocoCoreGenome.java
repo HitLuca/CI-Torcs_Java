@@ -3,9 +3,9 @@ package fuoco;
 import cicontest.torcs.genome.IGenome;
 import java.io.*;
 
+
 public class FuocoCoreGenome implements IGenome {
     private static final long serialVersionUID = 6534186543165341653L;
-
     private NeuralNet[] nets;
     private double space_offset;
     private double brake_force;
@@ -18,8 +18,6 @@ public class FuocoCoreGenome implements IGenome {
         String[] names = {"alpine-1.ffn", "alpine-1_speed245_actor.ffn", "corkscrew.ffn", "e-track-4_speed170_actor.ffn", "street-1.ffn"};
 
         for (int c = 0; c < names.length; c++) {
-//            Logger.println(getClass().getResource("/memory/nets/"+names[c]));
-//            break;
             InputStreamReader stream = new InputStreamReader(getClass().getResourceAsStream("/memory/nets/"+names[c]));
             nets[c] = new NeuralNet(stream);
 

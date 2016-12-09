@@ -15,7 +15,12 @@ public class FuocoCore implements Core {
     private Matrix input = new Matrix(new double[29][1]);
     private double[] steering;
     private double[] accelBrake;
-    private boolean stop = false;
+
+    private int stuck = 0;
+    private int stuckstill = 0;
+
+    private int[] gearUp = new int[]{9000, 8500, 8500, 8000, 8000, 0};
+    private int[] gearDown = new int[]{0, 3500, 4000, 4000, 4500, 4500};
 
     private void retrievePredictions(SensorModel sensors) {
         sensors2INDArray(sensors);
@@ -41,32 +46,39 @@ public class FuocoCore implements Core {
         input.values[28][0] = sensors.getRPM()/10000.0;
     }
 
-    @Override
-    public Action computeAction(Action action, SensorModel sensors) {
-        retrievePredictions(sensors);
-
+    private void meanSteering(Action action) {
         double meanSteering = 0;
         for (int i = 0; i < nets.length; i++) {
             meanSteering += steering[i];
         }
         meanSteering /= nets.length;
+        action.steering = meanSteering;
+    }
 
-        double meanAccelBrake = 0;
+    private double minAccelBrake() {
         double accelBrakeMin = Double.MAX_VALUE;
-        for (int i = 0; i < nets.length; i++) {
-            meanAccelBrake += accelBrake[i];
+        for (int i = 0; i < accelBrake.length; i++) {
             if (accelBrakeMin > accelBrake[i]) {
                 accelBrakeMin = accelBrake[i];
             }
         }
-        meanAccelBrake /= nets.length;
+        return accelBrakeMin;
+    }
 
-        action.steering = meanSteering;
+    private double meanAccelBrake() {
+        double meanAccelBrake = 0;
+        for (int i = 0; i < accelBrake.length; i++) {
+            meanAccelBrake += accelBrake[i];
+        }
+        return meanAccelBrake / nets.length;
+    }
 
-        double predicted;
+    private void safeAccelBrake (Action action) {
+        double meanAccelBrake = meanAccelBrake();
+        double accelBrakeMin = minAccelBrake();
 
-        double d = 0;
         if (accelBrakeMin < 0) {
+            double d = 0;
             for (int i = 0; i < accelBrake.length; i++) {
                 if (accelBrake[i] > 0) {
                     d += accelBrake[i] * 0.1;
@@ -74,19 +86,21 @@ public class FuocoCore implements Core {
                     d += accelBrake[i] * 2;
                 }
             }
-            predicted = d / accelBrake.length;
+            accelBrakeMin = d / accelBrake.length;
         } else {
-            predicted = meanAccelBrake;
+            accelBrakeMin = meanAccelBrake;
         }
 
-        if (predicted >= 0) {
-            action.accelerate = predicted;
+        if (accelBrakeMin >= 0) {
+            action.accelerate = accelBrakeMin;
             action.brake = 0;
         } else {
             action.accelerate = 0;
-            action.brake = -predicted;
+            action.brake = -accelBrakeMin;
         }
+    }
 
+    private void speedwaysSteeringHelp(Action action, SensorModel sensors) {
         if (sensors.getSpeed() > 225) {
             if (action.steering > 0) {
                 action.steering = Math.pow(action.steering, 4);
@@ -100,7 +114,24 @@ public class FuocoCore implements Core {
                 action.steering = -Math.pow(action.steering, 2);
             }
         }
+    }
 
+    private void automatedGearbox(Action action, SensorModel sensors) {
+        int gear = sensors.getGear();
+        double rpm = sensors.getRPM();
+        action.gear = gear;
+        if(gear < 1) {
+            action.gear = 1;
+        } else if(gear < 6 && rpm >= (double)this.gearUp[gear - 1]) {
+            action.gear = gear + 1;
+        } else {
+            if(gear > 1 && rpm <= (double)this.gearDown[gear - 1]) {
+                action.gear = gear - 1;
+            }
+        }
+    }
+
+    private void accelBrakeHelp(Action action, SensorModel sensors) {
         int max = 0;
         for(int i = 0; i < 19; i++) {
             if (sensors.getTrackEdgeSensors()[i] > sensors.getTrackEdgeSensors()[max]) {
@@ -124,6 +155,67 @@ public class FuocoCore implements Core {
                 action.brake = 0.0;
             }
         }
+    }
+
+    private void speedLim(Action action, SensorModel sensors, double speed) {
+        if (sensors.getSpeed() > speed) {
+            action.accelerate = 0;
+        }
+    }
+
+    private void recover(Action action, SensorModel sensors) {
+        if(sensors.getSpeed() < 5.0D && sensors.getDistanceFromStartLine() > 0.0D) {
+            ++this.stuckstill;
+        }
+
+        if(Math.abs(sensors.getAngleToTrackAxis()) > 0.5235987901687622D) {
+            if(this.stuck > 0 || Math.abs(sensors.getTrackPosition()) > 0.85D) {
+                ++this.stuck;
+            }
+        } else if(this.stuck > 0 && Math.abs(sensors.getAngleToTrackAxis()) < 0.3D) {
+            this.stuck = 0;
+            this.stuckstill = 0;
+        }
+
+        if(this.stuckstill > 50) {
+            this.stuck = 26;
+        }
+
+        if(this.stuck > 25) {
+            action.accelerate = 0.7D;
+            action.brake = 0.0D;
+            action.gear = -1;
+            action.steering = -1.0D;
+            if(sensors.getAngleToTrackAxis() < 0.0D) {
+                action.steering = 1.0D;
+            }
+
+            if(sensors.getTrackEdgeSensors()[9] > 3.0D || sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0.0D) {
+                action.gear = 1;
+                if(sensors.getSpeed() < -0.2D) {
+                    action.brake = 1.0D;
+                    action.accelerate = 0.0D;
+                }
+            }
+
+            if(sensors.getSpeed() > 0.0D) {
+                action.steering = -action.steering;
+            }
+        }
+    }
+
+    public Action computeAction(Action action, SensorModel sensors) {
+        retrievePredictions(sensors);
+
+        meanSteering(action);
+        safeAccelBrake(action);
+        speedwaysSteeringHelp(action, sensors);
+        accelBrakeHelp(action, sensors);
+
+//        speedLim(action, sensors, 50);
+
+        automatedGearbox(action, sensors);
+        recover(action, sensors);
 
         return action;
     }

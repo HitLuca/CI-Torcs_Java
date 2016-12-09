@@ -8,7 +8,6 @@ import cicontest.torcs.genome.IGenome;
 import scr.Action;
 import scr.SensorModel;
 
-import java.io.FileNotFoundException;
 
 public class FuocoDriver extends AbstractDriver {
 
@@ -17,8 +16,10 @@ public class FuocoDriver extends AbstractDriver {
     private boolean hasDamage = false;
 
     public FuocoDriver() {
-        this.enableExtras(new AutomatedRecovering());
-        this.enableExtras(new AutomatedGearbox());
+//        this.enableExtras(new ABS());
+//        this.enableExtras(new AutomatedClutch());
+//        this.enableExtras(new AutomatedGearbox());
+//        this.enableExtras(new AutomatedRecovering());
     }
 
     @Override
