@@ -31,7 +31,7 @@ public class EvolveDriver {
         algorithm = new FuocoDriverAlgorithm();
         algorithm.setTracks();
         setupGeneticAlgorithm(algorithm);
-        Individual result = engine.evolve(10, 1, new Stagnation(15, false));
+        Individual result = engine.evolve(15, 1, new Stagnation(15, false));
 
         System.setOut(stdout);
         System.out.println();
@@ -45,7 +45,7 @@ public class EvolveDriver {
 
         List<EvolutionaryOperator<Individual>> operators = new ArrayList<>(2);
         operators.add(new IndividualCrossover(1));
-        operators.add(new IndividualMutation(new Probability(0.1), new Probability(0.1)));
+        operators.add(new IndividualMutation(new Probability(0.02), new Probability(1)));
 
         EvolutionaryOperator<Individual> evolutionaryOperator = new EvolutionPipeline<>(operators);
 

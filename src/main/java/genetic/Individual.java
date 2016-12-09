@@ -12,8 +12,8 @@ public class Individual {
 
     private int minOffset = 0;
     private int maxOffset = 80;
-    private float minMulFactor = 1;
-    private float maxMulFactor = 2;
+    private float minMulFactor = 0;
+    private float maxMulFactor = 3;
 
     private List<Object> genome;
 
