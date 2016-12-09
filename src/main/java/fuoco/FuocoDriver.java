@@ -18,8 +18,10 @@ public class FuocoDriver extends AbstractDriver {
     private boolean hasDamage = false;
 
     public FuocoDriver() {
+//        this.enableExtras(new ABS());
 //        this.enableExtras(new AutomatedClutch());
         this.enableExtras(new AutomatedRecovering());
+        this.enableExtras(new AutomatedGearbox());
     }
 
     @Override
@@ -27,12 +29,6 @@ public class FuocoDriver extends AbstractDriver {
         if (genome instanceof FuocoCoreGenome) {
             core = new FuocoCore();
             core.loadGenome(genome);
-            if (((FuocoCoreGenome) genome).getABS()) {
-                this.enableExtras(new ABS());
-            }
-            if (((FuocoCoreGenome) genome).getAutomatedGearbox()) {
-                this.enableExtras(new AutomatedGearbox());
-            }
         } else {
             core = new DefaultCore();
             core.loadGenome(genome);
@@ -83,17 +79,8 @@ public class FuocoDriver extends AbstractDriver {
 
     @Override
     public Action defaultControl(Action action, SensorModel sensors) {
-
         action = this.core.computeAction(sensors);
-
         hasDamage = sensors.getDamage() > 0;
-
-//        System.out.println("--------------" + getDriverName() + "--------------");
-//        System.out.println("Steering: " + action.steering);
-//        System.out.println("Acceleration: " + action.accelerate);
-//        System.out.println("Brake: " + action.brake);
-//        System.out.println("-----------------------------------------------");
-
         return action;
     }
 }
