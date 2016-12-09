@@ -80,7 +80,7 @@ public class FuocoDriverAlgorithm extends AbstractAlgorithm {
 
 
         FuocoRace race = new FuocoRace();
-        race.setTrack("aalborg" , "road");
+        race.setTrack("dirt-2" , "dirt");
         race.laps = 1;
 
         RaceResult r = race.runRace(drivers, true)[0];

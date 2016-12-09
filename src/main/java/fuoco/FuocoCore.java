@@ -22,6 +22,8 @@ public class FuocoCore implements Core {
     private int[] gearUp = new int[]{9000, 8500, 8500, 8000, 8000, 0};
     private int[] gearDown = new int[]{0, 3500, 4000, 4000, 4500, 4500};
 
+    private double lastClutch = 0;
+
     private void retrievePredictions(SensorModel sensors) {
         sensors2INDArray(sensors);
         for (int i = 0; i < nets.length; i++) {
@@ -124,9 +126,11 @@ public class FuocoCore implements Core {
             action.gear = 1;
         } else if(gear < 6 && rpm >= (double)this.gearUp[gear - 1]) {
             action.gear = gear + 1;
+            lastClutch = 1;
         } else {
             if(gear > 1 && rpm <= (double)this.gearDown[gear - 1]) {
                 action.gear = gear - 1;
+                lastClutch = 1;
             }
         }
     }
@@ -204,6 +208,35 @@ public class FuocoCore implements Core {
         }
     }
 
+    public void automatedClutch(Action action, SensorModel sensors){
+        double clutch = lastClutch;
+        float maxClutch = 0.5F;
+        if(sensors.getDistanceRaced() < 10.0D) {
+            clutch = (double)maxClutch;
+        }
+
+        if(clutch > 0.0D) {
+            double delta = 0.05000000074505806D;
+            if(sensors.getGear() < 2) {
+                delta /= 2.0D;
+                maxClutch *= 1.3F;
+                if(sensors.getCurrentLapTime() < 1.5D) {
+                    clutch = (double)maxClutch;
+                }
+            }
+
+            clutch = Math.min((double)maxClutch, clutch);
+            if(clutch != (double)maxClutch) {
+                clutch -= delta;
+                clutch = Math.max(0.0D, clutch);
+            } else {
+                clutch -= 0.009999999776482582D;
+            }
+        }
+        action.clutch = clutch;
+        lastClutch = clutch;
+    }
+
     public Action computeAction(Action action, SensorModel sensors) {
         retrievePredictions(sensors);
 
@@ -215,6 +248,7 @@ public class FuocoCore implements Core {
 //        speedLim(action, sensors, 50);
 
         automatedGearbox(action, sensors);
+        automatedClutch(action, sensors);
         recover(action, sensors);
 
         return action;

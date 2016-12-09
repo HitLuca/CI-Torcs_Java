@@ -1,9 +1,6 @@
 package fuoco;
 
 import cicontest.algorithm.abstracts.AbstractDriver;
-import cicontest.torcs.controller.extras.ABS;
-import cicontest.torcs.controller.extras.AutomatedGearbox;
-import cicontest.torcs.controller.extras.AutomatedRecovering;
 import cicontest.torcs.genome.IGenome;
 import scr.Action;
 import scr.SensorModel;
