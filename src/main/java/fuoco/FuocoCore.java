@@ -1,9 +1,6 @@
 package fuoco;
 
 import cicontest.torcs.genome.IGenome;
-//import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
-//import org.nd4j.linalg.api.ndarray.INDArray;
-//import org.nd4j.linalg.factory.Nd4j;
 import scr.Action;
 import scr.SensorModel;
 
@@ -11,7 +8,6 @@ import java.io.*;
 
 public class FuocoCore implements Core {
 
-//    private MultiLayerNetwork[] nets;
     private NeuralNet[] nets;
     private double space_offset;
     private double brake_force;
@@ -19,6 +15,7 @@ public class FuocoCore implements Core {
     private Matrix input = new Matrix(new double[29][1]);
     private double[] steering;
     private double[] accelBrake;
+    private boolean stop = false;
 
     private void retrievePredictions(SensorModel sensors) {
         sensors2INDArray(sensors);
@@ -105,17 +102,31 @@ public class FuocoCore implements Core {
             }
         }
 
-        if (sensors.getSpeed() < 10) {
-            action.accelerate = 1D;
-            action.brake = 0D;
+        int max = 0;
+        for(int i = 0; i < 19; i++) {
+            if (sensors.getTrackEdgeSensors()[i] > sensors.getTrackEdgeSensors()[max]) {
+                max = i;
+            }
         }
 
-        double space = 0.000851898 * Math.pow(sensors.getSpeed(), 2) + 0.104532 * sensors.getSpeed() - 2.03841;
+        if (sensors.getSpeed() < 20) {
+            action.accelerate = 1.0;
+            action.brake = 0.0;
+            action.steering = action.steering * 0.8 + 0.2 * (9 - max) / 9.0;
+        } else {
+            double space = 0.000851898 * Math.pow(sensors.getSpeed(), 2) + 0.104532 * sensors.getSpeed() - 2.03841;
 
-        if (sensors.getTrackEdgeSensors()[9] < space + space_offset) {
-            action.accelerate = 0;
-            action.brake *= brake_force;
+            if (sensors.getTrackEdgeSensors()[9] < space + space_offset) {
+                action.accelerate = 0;
+                action.brake *= brake_force;
+                action.steering = action.steering * 0.8 + 0.2 * (9 - max) / 9.0;
+            } else if (sensors.getTrackEdgeSensors()[9] > 0.3) {
+                action.accelerate = 1.0;
+                action.brake = 0.0;
+            }
         }
+
+
 
         return action;
     }

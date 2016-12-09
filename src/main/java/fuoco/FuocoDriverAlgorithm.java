@@ -103,7 +103,7 @@ public class FuocoDriverAlgorithm implements Serializable {
 
     public static void main(String[] args) throws Exception {
         FuocoDriverAlgorithm algorithm = new FuocoDriverAlgorithm();
-//        Logger.init();
+        Logger.init();
 
         ArgumentParser parser = configureParser();
         Namespace res;
@@ -126,9 +126,12 @@ public class FuocoDriverAlgorithm implements Serializable {
         track = track.substring(1).substring(0, track.length() - 2);
 
         if (allTracks) {
-            algorithm.testAllTracks(withGUI, laps, 13, 1.670994);
+            algorithm.testAllTracks(withGUI, laps, 13, 2);
         } else {
-            algorithm.runRace(withGUI, laps, track, 13, 1.670994);
+            FuocoResults result = algorithm.runRace(withGUI, laps, track, 13, 2);
+            Logger.println(track);
+            Logger.println(result.res.getTime());
+            Logger.println(result.damage + "\n");
         }
     }
 
@@ -151,7 +154,7 @@ public class FuocoDriverAlgorithm implements Serializable {
             }
 
             Logger.println(t);
-            Logger.println(time);
+            Logger.println(time / laps);
             Logger.println(damage + "\n");
 
             if (!damage) {
@@ -161,7 +164,7 @@ public class FuocoDriverAlgorithm implements Serializable {
                 failedTimes += result.res.getTime();
             }
         }
-        Logger.println(totalTime);
+        Logger.println(totalTime / laps);
         Logger.println(totalFails);
         Logger.println(failedTimes);
     }
