@@ -9,7 +9,7 @@ import java.io.Serializable;
 
 public interface Core extends Serializable {
 
-    Action computeAction(SensorModel sensors);
+    Action computeAction(Action action, SensorModel sensors);
 
     void loadGenome(IGenome genome);
 

@@ -6,8 +6,7 @@ import scr.Action;
 import scr.SensorModel;
 
 public class DefaultCore implements Core {
-    public Action computeAction(SensorModel sensors) {
-        Action action = new Action();
+    public Action computeAction(Action action, SensorModel sensors) {
         action.steering = DriversUtils.alignToTrackAxis(sensors, 0.5);
         if (sensors.getSpeed() > 60.0D) {
             action.accelerate = 0.0D;

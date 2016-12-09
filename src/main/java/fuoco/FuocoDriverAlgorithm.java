@@ -9,7 +9,6 @@ import race.TorcsConfiguration;
 
 import java.io.File;
 
-import java.io.Serializable;
 import java.util.*;
 
 public class FuocoDriverAlgorithm extends AbstractAlgorithm {
@@ -72,18 +71,9 @@ public class FuocoDriverAlgorithm extends AbstractAlgorithm {
     @Override
     public void run(boolean b) {
 
-        File dir = new File("memory/nets");
-        File[] files = dir.listFiles();
-
-        double[] s = new double[files.length], a = new double[files.length];
-        for (int i = 0; i < files.length; i++) {
-            s[i] = 1.0D / files.length;
-            a[i] = 1.0D / files.length;
-        }
-
         IGenome[] drivers = new IGenome[0];
         try {
-            drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", s, a, false, true, false, 15, 1.5)};
+            drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", 15, 1.5)};
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -162,7 +152,7 @@ public class FuocoDriverAlgorithm extends AbstractAlgorithm {
 
         Logger.println(track);
 
-        IGenome[] drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", steeringWeights, accelBrakegWeights, ABS, AutomatedGearbox, min, space_offset, brake_force)};
+        IGenome[] drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", space_offset, brake_force)};
 
         FuocoRace race = new FuocoRace();
 

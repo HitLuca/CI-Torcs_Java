@@ -2,7 +2,6 @@ package fuoco;
 
 import cicontest.algorithm.abstracts.AbstractDriver;
 import cicontest.torcs.controller.extras.ABS;
-import cicontest.torcs.controller.extras.AutomatedClutch;
 import cicontest.torcs.controller.extras.AutomatedGearbox;
 import cicontest.torcs.controller.extras.AutomatedRecovering;
 import cicontest.torcs.genome.IGenome;
@@ -18,8 +17,6 @@ public class FuocoDriver extends AbstractDriver {
     private boolean hasDamage = false;
 
     public FuocoDriver() {
-//        this.enableExtras(new ABS());
-//        this.enableExtras(new AutomatedClutch());
         this.enableExtras(new AutomatedRecovering());
         this.enableExtras(new AutomatedGearbox());
     }
@@ -79,7 +76,7 @@ public class FuocoDriver extends AbstractDriver {
 
     @Override
     public Action defaultControl(Action action, SensorModel sensors) {
-        action = this.core.computeAction(sensors);
+        action = this.core.computeAction(action, sensors);
         hasDamage = sensors.getDamage() > 0;
         return action;
     }

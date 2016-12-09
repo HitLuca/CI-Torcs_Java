@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,9 +29,9 @@ public class NeuralNet {
         }
     }
 
-    private static List<Matrix> readM(File file) throws IOException {
+    private static List<Matrix> readM(InputStreamReader stream) throws IOException {
         List<Double> l = new ArrayList<>();
-        BufferedReader br = new BufferedReader(new FileReader(file));
+        BufferedReader br = new BufferedReader(stream);
         String line;
         while ((line = br.readLine()) != null) {
             l.add(Double.parseDouble(line));
@@ -91,8 +92,8 @@ public class NeuralNet {
         return matrices;
     }
     
-    public NeuralNet(File path) throws IOException {
-        net = readM(path);
+    public NeuralNet(InputStreamReader stream) throws IOException {
+        net = readM(stream);
     }
     
     public Matrix predict(Matrix in) {
