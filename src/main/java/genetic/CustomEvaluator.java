@@ -45,16 +45,7 @@ public class CustomEvaluator implements FitnessEvaluator<Individual> {
             assert results != null;
             for (FuocoDriverAlgorithm.FuocoResults result: results) {
                 RaceResult raceResult = result.res;
-
-                if (!result.damage) {
-                    if (raceResult.isFinished()) {
-                        fitness += raceResult.getTime();
-                    } else {
-                        fitness += 2000;
-                    }
-                } else {
-                    fitness += 1000 - raceResult.getTime();
-                }
+                fitness += raceResult.getTime();
             }
             System.setOut(stdout);
             System.out.println("Individual fitness: " + fitness);
