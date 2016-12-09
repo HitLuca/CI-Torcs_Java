@@ -93,6 +93,11 @@ public class FuocoDriverAlgorithm implements Serializable {
                 .setDefault("[1]")
                 .help("Number of laps");
 
+        parser.addArgument("-o", "--opponents")
+                .nargs(1)
+                .setDefault("[0]")
+                .help("Number of opponents");
+
         parser.addArgument("-t", "--track")
                 .nargs(1)
                 .setDefault("b-speedway")
@@ -107,10 +112,12 @@ public class FuocoDriverAlgorithm implements Serializable {
 
         ArgumentParser parser = configureParser();
         Namespace res;
+
         boolean withGUI = false;
         String laps_string = "";
         boolean allTracks = false;
         String track = "";
+        String opp_string = "";
 
         try {
             res = parser.parseArgs(args);
@@ -118,24 +125,28 @@ public class FuocoDriverAlgorithm implements Serializable {
             laps_string = res.getString("laps");
             allTracks = res.getBoolean("all");
             track = res.getString("track");
+            opp_string = res.getString("opponents");
         } catch (ArgumentParserException e) {
             e.printStackTrace();
         }
 
         int laps = Integer.parseInt(laps_string.substring(1).substring(0, laps_string.length() - 2));
+        int opp = Integer.parseInt(opp_string.substring(1).substring(0, opp_string.length() - 2));
         track = track.substring(1).substring(0, track.length() - 2);
 
         if (allTracks) {
-            algorithm.testAllTracks(withGUI, laps, 13, 2);
+            algorithm.testAllTracks(withGUI, laps, opp, 13, 2);
         } else {
-            FuocoResults result = algorithm.runRace(withGUI, laps, track, 13, 2);
-            Logger.println(track);
-            Logger.println(result.res.getTime());
-            Logger.println(result.damage + "\n");
+            FuocoResults[] result = algorithm.runRace(withGUI, laps, opp, track, 13, 2);
+            for (int i = 0; i < opp + 1; i++) {
+                Logger.println(track);
+                Logger.println(result[i].res.getTime());
+                Logger.println(result[i].damage + "\n");
+            }
         }
     }
 
-    private void testAllTracks(boolean withGUI, int laps, double space_offset, double brake_force) throws Exception {
+    private void testAllTracks(boolean withGUI, int laps, int opponents, double space_offset, double brake_force) throws Exception {
         SortedSet<String> allTracks = new TreeSet<>(trackDict.keySet());
         DecimalFormat df = new DecimalFormat("#.0000");
 
@@ -144,48 +155,60 @@ public class FuocoDriverAlgorithm implements Serializable {
         double failedTimes = 0D;
 
         for (String t : allTracks) {
-            FuocoResults result = runRace(withGUI, laps, t, space_offset, brake_force);
+            FuocoResults[] result = runRace(withGUI, laps, opponents, t, space_offset, brake_force);
 
-            boolean damage = result.damage;
-            double time = Double.parseDouble(df.format(result.res.getTime()));
+            for (int i = 0; i < opponents + 1; i++) {
+                boolean damage = result[i].damage;
+                double time = Double.parseDouble(df.format(result[i].res.getTime()));
 
-            if (t.equals("g-track-3") || t.equals("ole-road-1")) {
-                damage = false;
+                if (t.equals("g-track-3") || t.equals("ole-road-1")) {
+                    damage = false;
+                }
+
+                Logger.println(t);
+                Logger.println(time / laps);
+                Logger.println(damage + "\n");
+
+                if (!damage) {
+                    totalTime += result[i].res.getTime();
+                } else {
+                    totalFails += 1;
+                    failedTimes += result[i].res.getTime();
+                }
             }
-
-            Logger.println(t);
-            Logger.println(time / laps);
-            Logger.println(damage + "\n");
-
-            if (!damage) {
-                totalTime += result.res.getTime();
-            } else {
-                totalFails += 1;
-                failedTimes += result.res.getTime();
-            }
+            Logger.println("\n\n");
         }
         Logger.println(totalTime / laps);
         Logger.println(totalFails);
         Logger.println(failedTimes);
     }
 
-    private FuocoResults runRace (boolean withGUI, int laps, String track, double space_offset, double brake_force) throws Exception {
-        IGenome[] drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", space_offset, brake_force)};
+    private FuocoResults[] runRace (boolean withGUI, int laps, int opponents, String track, double space_offset, double brake_force) throws Exception {
+
+        IGenome[] drivers = new IGenome[opponents + 1];
+        for (int i = 0; i < opponents + 1; i++) {
+            drivers[i] = new FuocoCoreGenome("memory/nets", space_offset, brake_force);
+        }
 
         FuocoRace race = new FuocoRace();
         race.setTrack(track, trackDict.get(track));
         race.laps = laps;
-        RaceResult r = race.runRace(drivers, withGUI)[0];
-        boolean damage = ((FuocoDriver) r.getDriver()).hasDamage();
 
-        return new FuocoResults(r, damage);
+        RaceResult[] r = race.runRace(drivers, withGUI);
+        FuocoResults[] fr = new FuocoResults[opponents + 1];
+
+        for (int i = 0; i < opponents + 1; i++) {
+            fr[i] =  new FuocoResults(r[i], ((FuocoDriver) r[i].getDriver()).hasDamage());
+        }
+
+        return fr;
     }
 
     public List<FuocoResults> fitness(double space_offset, double brake_force) throws Exception {
         List<FuocoResults> results = new ArrayList<>();
 
         for(String t : tracks) {
-            FuocoResults result = runRace(false, 1, t, space_offset, brake_force);
+            FuocoResults result = runRace(false, 1, 0, t, space_offset, brake_force)[0];
             results.add(result);
         }
         return results;

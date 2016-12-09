@@ -16,6 +16,12 @@ public class FuocoCore implements Core {
     private double[] steering;
     private double[] accelBrake;
 
+    private int stuck = 0;
+    private int stuckstill = 0;
+
+    private int[] gearUp = new int[]{9000, 8500, 8500, 8000, 8000, 0};
+    private int[] gearDown = new int[]{0, 3500, 4000, 4000, 4500, 4500};
+
     private void retrievePredictions(SensorModel sensors) {
         sensors2INDArray(sensors);
         for (int i = 0; i < nets.length; i++) {
@@ -124,6 +130,57 @@ public class FuocoCore implements Core {
             }
         }
 
+        int gear = sensors.getGear();
+        double rpm = sensors.getRPM();
+        action.gear = gear;
+        if(gear < 1) {
+            action.gear = 1;
+        } else if(gear < 6 && rpm >= (double)this.gearUp[gear - 1]) {
+            action.gear = gear + 1;
+        } else {
+            if(gear > 1 && rpm <= (double)this.gearDown[gear - 1]) {
+                action.gear = gear - 1;
+            }
+        }
+
+        if(sensors.getSpeed() < 5.0D && sensors.getDistanceFromStartLine() > 0.0D) {
+            ++this.stuckstill;
+        }
+
+        if(Math.abs(sensors.getAngleToTrackAxis()) > 0.5235987901687622D) {
+            if(this.stuck > 0 || Math.abs(sensors.getTrackPosition()) > 0.85D) {
+                ++this.stuck;
+            }
+        } else if(this.stuck > 0 && Math.abs(sensors.getAngleToTrackAxis()) < 0.3D) {
+            this.stuck = 0;
+            this.stuckstill = 0;
+        }
+
+        if(this.stuckstill > 40) {
+            this.stuck = 26;
+        }
+
+        if(this.stuck > 25) {
+            action.accelerate = 0.7D;
+            action.brake = 0.0D;
+            action.gear = -1;
+            action.steering = -1.0D;
+            if(sensors.getAngleToTrackAxis() < 0.0D) {
+                action.steering = 1.0D;
+            }
+
+            if(sensors.getTrackEdgeSensors()[9] > 3.0D || sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0.0D) {
+                action.gear = 1;
+                if(sensors.getSpeed() < -0.2D) {
+                    action.brake = 1.0D;
+                    action.accelerate = 0.0D;
+                }
+            }
+
+            if(sensors.getSpeed() > 0.0D) {
+                action.steering = -action.steering;
+            }
+        }
 
         return action;
     }
