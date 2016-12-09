@@ -9,7 +9,6 @@ import cicontest.torcs.genome.IGenome;
 import scr.Action;
 import scr.SensorModel;
 
-import java.io.FileNotFoundException;
 
 public class FuocoDriver extends AbstractDriver {
 
