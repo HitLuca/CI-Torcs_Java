@@ -20,8 +20,8 @@ public class FuocoDriver extends AbstractDriver {
     public FuocoDriver() {
 //        this.enableExtras(new ABS());
 //        this.enableExtras(new AutomatedClutch());
-        this.enableExtras(new AutomatedRecovering());
         this.enableExtras(new AutomatedGearbox());
+        this.enableExtras(new AutomatedRecovering());
     }
 
     @Override
@@ -79,7 +79,7 @@ public class FuocoDriver extends AbstractDriver {
 
     @Override
     public Action defaultControl(Action action, SensorModel sensors) {
-        action = this.core.computeAction(sensors);
+        action = this.core.computeAction(action, sensors);
         hasDamage = sensors.getDamage() > 0;
         return action;
     }

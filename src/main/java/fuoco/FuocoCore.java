@@ -15,7 +15,6 @@ public class FuocoCore implements Core {
     private Matrix input = new Matrix(new double[29][1]);
     private double[] steering;
     private double[] accelBrake;
-    private boolean stop = false;
 
     private void retrievePredictions(SensorModel sensors) {
         sensors2INDArray(sensors);
@@ -41,8 +40,7 @@ public class FuocoCore implements Core {
         input.values[28][0] = sensors.getRPM()/10000.0;
     }
 
-    public Action computeAction(SensorModel sensors) {
-        Action action = new Action();
+    public Action computeAction(Action action, SensorModel sensors) {
 
         retrievePredictions(sensors);
 
@@ -125,7 +123,6 @@ public class FuocoCore implements Core {
                 action.brake = 0.0;
             }
         }
-
 
 
         return action;
