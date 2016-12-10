@@ -3,6 +3,7 @@ import cicontest.torcs.genome.IGenome;
 import scr.Action;
 import scr.SensorModel;
 import java.io.*;
+
 public class FuocoCore implements Core {
     private NeuralNet[] nets;
     private double space_offset;
@@ -15,6 +16,8 @@ public class FuocoCore implements Core {
     private int[] gearUp = new int[]{9000, 8500, 8500, 8000, 8000, 0};
     private int[] gearDown = new int[]{0, 3500, 4000, 4000, 4500, 4500};
     private double lastClutch = 0;
+    private boolean wingman = true;
+
     private void retrievePredictions(SensorModel sensors) {
         sensors2INDArray(sensors);
         for (int i = 0; i < nets.length; i++) {
@@ -217,9 +220,55 @@ public class FuocoCore implements Core {
 //        speedLim(action, sensors, 50);
         automatedGearbox(action, sensors);
         automatedClutch(action, sensors);
+        pairDriving(action, sensors);
         recover(action, sensors);
         return action;
     }
+
+    private void pairDriving(Action action, SensorModel sensors) {
+        if (wingman) {
+            if (sensors.getDistanceRaced() > 50) {
+                double[] opponents = sensors.getOpponentSensors();
+                int nearestOpponent = -1;
+                double nearestOpponentDistance = 200.0;
+                double trackPos = Math.abs(sensors.getTrackPosition());
+
+                for (int i = 0; i < opponents.length; i++) {
+                    if (opponents[i] != 200.0) {
+                        if (opponents[i] < nearestOpponentDistance) {
+                            nearestOpponent = i;
+                            nearestOpponentDistance = opponents[i];
+                        }
+                    }
+                }
+
+                System.out.println(nearestOpponent + " " + nearestOpponentDistance);
+                if (nearestOpponent >= 16 && nearestOpponent <= 20 &&nearestOpponentDistance < 10) {
+                    if (trackPos > 0 && trackPos < 0.5) {
+                        action.steering = 0.1;
+                    } else if (trackPos < 0 && trackPos > -0.5){
+                        action.steering = -0.1;
+                    }
+                } else if ((nearestOpponent <= 4 || nearestOpponent >=32) && nearestOpponentDistance < 15){
+                    int myAngle = (int) (sensors.getAngleToTrackAxis() * 10);
+                    nearestOpponent += myAngle;
+
+                    if (nearestOpponent != 0 && Math.abs(sensors.getTrackPosition()) < 0.3) {
+                        if (nearestOpponent <= 3) {
+                            action.steering = 0.05 * nearestOpponent;
+                        } else if (nearestOpponent >= 33) {
+                            action.steering = -0.05 * (36 - nearestOpponent);
+                        }
+                    }
+                } else if (nearestOpponent >= 8 && nearestOpponent <= 10 && nearestOpponentDistance <= 5) {
+                    action.steering = 0.1;
+                } else if (nearestOpponent >= 26 && nearestOpponent <= 28 && nearestOpponentDistance <= 5) {
+                    action.steering = -0.1;
+                }
+            }
+        }
+    }
+
     public void loadGenome(IGenome genome) {
         nets = ((FuocoCoreGenome) genome).getNets();
         space_offset = ((FuocoCoreGenome) genome).getSpace_offset();
