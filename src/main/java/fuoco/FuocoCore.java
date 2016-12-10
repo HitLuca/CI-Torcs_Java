@@ -167,13 +167,16 @@ public class FuocoCore implements Core {
             if(sensors.getAngleToTrackAxis() < 0.0D) {
                 action.steering = 1.0D;
             }
-            if(sensors.getTrackEdgeSensors()[9] > 3.0D || sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0.0D) {
+            if(sensors.getTrackEdgeSensors()[9] > 5.0D || sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0.0D) {
                 action.gear = 1;
                 if(sensors.getSpeed() < -0.2D) {
                     action.brake = 1.0D;
                     action.accelerate = 0.0D;
                 }
+                this.stuck = 0;
+                this.stuckstill = 0;
             }
+
             if(sensors.getSpeed() > 0.0D) {
                 action.steering = -action.steering;
             }
