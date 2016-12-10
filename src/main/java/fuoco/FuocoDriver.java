@@ -1,13 +1,19 @@
 package fuoco;
 
 import cicontest.algorithm.abstracts.AbstractDriver;
+import cicontest.algorithm.abstracts.DriversUtils;
 import cicontest.torcs.controller.extras.ABS;
 import cicontest.torcs.controller.extras.AutomatedClutch;
 import cicontest.torcs.controller.extras.AutomatedGearbox;
 import cicontest.torcs.controller.extras.AutomatedRecovering;
 import cicontest.torcs.genome.IGenome;
+import cicontest.torcs.race.Race;
+import com.sun.java.util.jar.pack.DriverResource;
 import scr.Action;
 import scr.SensorModel;
+
+import java.sql.DriverAction;
+import java.sql.DriverManager;
 
 
 public class FuocoDriver extends AbstractDriver {
@@ -17,9 +23,11 @@ public class FuocoDriver extends AbstractDriver {
     private boolean hasDamage = false;
 
     public FuocoDriver() {
-        this.enableExtras(new AutomatedClutch());
-        this.enableExtras(new AutomatedGearbox());
-        this.enableExtras(new AutomatedRecovering());
+        this.enableExtras(new AutomatedClutchGearbox());
+        this.enableExtras(new AutomatedRecoveringV2());
+//        this.enableExtras(new AutomatedClutch());
+//        this.enableExtras(new AutomatedGearbox());
+//        this.enableExtras(new AutomatedRecovering());
 //        this.enableExtras(new ABS());
     }
 
