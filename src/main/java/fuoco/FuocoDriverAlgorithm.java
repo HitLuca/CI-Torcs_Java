@@ -73,14 +73,14 @@ public class FuocoDriverAlgorithm extends AbstractAlgorithm {
 
         IGenome[] drivers = new IGenome[0];
         try {
-            drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", 15, 1.5)};
+            drivers = new IGenome[]{new FuocoCoreGenome("memory/nets", 15, 2)};
         } catch (Exception e) {
             e.printStackTrace();
         }
 
 
         FuocoRace race = new FuocoRace();
-        race.setTrack("dirt-2" , "dirt");
+        race.setTrack("dirt-1" , "dirt");
         race.laps = 1;
 
         RaceResult r = race.runRace(drivers, true)[0];
