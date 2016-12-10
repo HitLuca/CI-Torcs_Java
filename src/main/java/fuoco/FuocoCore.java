@@ -1,27 +1,20 @@
 package fuoco;
-
 import cicontest.torcs.genome.IGenome;
 import scr.Action;
 import scr.SensorModel;
-
 import java.io.*;
-
 public class FuocoCore implements Core {
-
     private NeuralNet[] nets;
     private double space_offset;
     private double brake_force;
-
     private Matrix input = new Matrix(new double[29][1]);
     private double[] steering;
     private double[] accelBrake;
-
     private int stuck = 0;
     private int stuckstill = 0;
-
     private int[] gearUp = new int[]{9000, 8500, 8500, 8000, 8000, 0};
     private int[] gearDown = new int[]{0, 3500, 4000, 4000, 4500, 4500};
-
+    private double lastClutch = 0;
     private void retrievePredictions(SensorModel sensors) {
         sensors2INDArray(sensors);
         for (int i = 0; i < nets.length; i++) {
@@ -30,7 +23,6 @@ public class FuocoCore implements Core {
             accelBrake[i] = prediction.values[1][0];
         }
     }
-
     private void sensors2INDArray(SensorModel sensors) {
         input.values[0][0] = sensors.getAngleToTrackAxis()/Math.PI;
         for (int i = 1; i < 20; i++) {
@@ -45,7 +37,6 @@ public class FuocoCore implements Core {
         }
         input.values[28][0] = sensors.getRPM()/10000.0;
     }
-
     private void meanSteering(Action action) {
         double meanSteering = 0;
         for (int i = 0; i < nets.length; i++) {
@@ -54,7 +45,6 @@ public class FuocoCore implements Core {
         meanSteering /= nets.length;
         action.steering = meanSteering;
     }
-
     private double minAccelBrake() {
         double accelBrakeMin = Double.MAX_VALUE;
         for (int i = 0; i < accelBrake.length; i++) {
@@ -64,7 +54,6 @@ public class FuocoCore implements Core {
         }
         return accelBrakeMin;
     }
-
     private double meanAccelBrake() {
         double meanAccelBrake = 0;
         for (int i = 0; i < accelBrake.length; i++) {
@@ -72,11 +61,9 @@ public class FuocoCore implements Core {
         }
         return meanAccelBrake / nets.length;
     }
-
     private void safeAccelBrake (Action action) {
         double meanAccelBrake = meanAccelBrake();
         double accelBrakeMin = minAccelBrake();
-
         if (accelBrakeMin < 0) {
             double d = 0;
             for (int i = 0; i < accelBrake.length; i++) {
@@ -90,7 +77,6 @@ public class FuocoCore implements Core {
         } else {
             accelBrakeMin = meanAccelBrake;
         }
-
         if (accelBrakeMin >= 0) {
             action.accelerate = accelBrakeMin;
             action.brake = 0;
@@ -99,7 +85,6 @@ public class FuocoCore implements Core {
             action.brake = -accelBrakeMin;
         }
     }
-
     private void speedwaysSteeringHelp(Action action, SensorModel sensors) {
         if (sensors.getSpeed() > 225) {
             if (action.steering > 0) {
@@ -115,7 +100,6 @@ public class FuocoCore implements Core {
             }
         }
     }
-
     private void automatedGearbox(Action action, SensorModel sensors) {
         int gear = sensors.getGear();
         double rpm = sensors.getRPM();
@@ -124,13 +108,14 @@ public class FuocoCore implements Core {
             action.gear = 1;
         } else if(gear < 6 && rpm >= (double)this.gearUp[gear - 1]) {
             action.gear = gear + 1;
+            lastClutch = 1;
         } else {
             if(gear > 1 && rpm <= (double)this.gearDown[gear - 1]) {
                 action.gear = gear - 1;
+                lastClutch = 1;
             }
         }
     }
-
     private void accelBrakeHelp(Action action, SensorModel sensors) {
         int max = 0;
         for(int i = 0; i < 19; i++) {
@@ -138,14 +123,12 @@ public class FuocoCore implements Core {
                 max = i;
             }
         }
-
         if (sensors.getSpeed() < 20) {
             action.accelerate = 1.0;
             action.brake = 0.0;
             action.steering = action.steering * 0.8 + 0.2 * (9 - max) / 9.0;
         } else {
             double space = 0.000851898 * Math.pow(sensors.getSpeed(), 2) + 0.104532 * sensors.getSpeed() - 2.03841;
-
             if (sensors.getTrackEdgeSensors()[9] < space + space_offset) {
                 action.accelerate = 0;
                 action.brake *= brake_force;
@@ -156,18 +139,15 @@ public class FuocoCore implements Core {
             }
         }
     }
-
     private void speedLim(Action action, SensorModel sensors, double speed) {
         if (sensors.getSpeed() > speed) {
             action.accelerate = 0;
         }
     }
-
     private void recover(Action action, SensorModel sensors) {
         if(sensors.getSpeed() < 5.0D && sensors.getDistanceFromStartLine() > 0.0D) {
             ++this.stuckstill;
         }
-
         if(Math.abs(sensors.getAngleToTrackAxis()) > 0.5235987901687622D) {
             if(this.stuck > 0 || Math.abs(sensors.getTrackPosition()) > 0.85D) {
                 ++this.stuck;
@@ -176,11 +156,9 @@ public class FuocoCore implements Core {
             this.stuck = 0;
             this.stuckstill = 0;
         }
-
         if(this.stuckstill > 50) {
             this.stuck = 26;
         }
-
         if(this.stuck > 25) {
             action.accelerate = 0.7D;
             action.brake = 0.0D;
@@ -189,7 +167,6 @@ public class FuocoCore implements Core {
             if(sensors.getAngleToTrackAxis() < 0.0D) {
                 action.steering = 1.0D;
             }
-
             if(sensors.getTrackEdgeSensors()[9] > 3.0D || sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0.0D) {
                 action.gear = 1;
                 if(sensors.getSpeed() < -0.2D) {
@@ -197,38 +174,56 @@ public class FuocoCore implements Core {
                     action.accelerate = 0.0D;
                 }
             }
-
             if(sensors.getSpeed() > 0.0D) {
                 action.steering = -action.steering;
             }
         }
     }
-
+    public void automatedClutch(Action action, SensorModel sensors){
+        double clutch = lastClutch;
+        float maxClutch = 0.5F;
+        if(sensors.getDistanceRaced() < 10.0D) {
+            clutch = (double)maxClutch;
+        }
+        if(clutch > 0.0D) {
+            double delta = 0.05000000074505806D;
+            if(sensors.getGear() < 2) {
+                delta /= 2.0D;
+                maxClutch *= 1.3F;
+                if(sensors.getCurrentLapTime() < 1.5D) {
+                    clutch = (double)maxClutch;
+                }
+            }
+            clutch = Math.min((double)maxClutch, clutch);
+            if(clutch != (double)maxClutch) {
+                clutch -= delta;
+                clutch = Math.max(0.0D, clutch);
+            } else {
+                clutch -= 0.009999999776482582D;
+            }
+        }
+        action.clutch = clutch;
+        lastClutch = clutch;
+    }
     public Action computeAction(Action action, SensorModel sensors) {
         retrievePredictions(sensors);
-
         meanSteering(action);
         safeAccelBrake(action);
         speedwaysSteeringHelp(action, sensors);
         accelBrakeHelp(action, sensors);
-
 //        speedLim(action, sensors, 50);
-
         automatedGearbox(action, sensors);
+        automatedClutch(action, sensors);
         recover(action, sensors);
-
         return action;
     }
-
     public void loadGenome(IGenome genome) {
         nets = ((FuocoCoreGenome) genome).getNets();
         space_offset = ((FuocoCoreGenome) genome).getSpace_offset();
         brake_force = ((FuocoCoreGenome) genome).getBrake_force();
-
         steering = new double[nets.length];
         accelBrake = new double[nets.length];
     }
-
     public IGenome getGenome() throws IOException {
         return null;
     }

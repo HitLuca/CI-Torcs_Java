@@ -176,7 +176,6 @@ public class FuocoDriverAlgorithm implements Serializable {
                     failedTimes += result[i].res.getTime();
                 }
             }
-            Logger.println("\n\n");
         }
         Logger.println(totalTime / laps);
         Logger.println(totalFails);
