@@ -333,9 +333,7 @@ public class FuocoCore implements Core {
         noStuck(action, sensors, 5);
         brakeSpace(action, sensors, 5);
         speedLim(action, sensors, 130);
-        automatedGearbox(action, sensors);
         superSafe(action,sensors);
-        recover(action, sensors);
 
         return action;
     }
