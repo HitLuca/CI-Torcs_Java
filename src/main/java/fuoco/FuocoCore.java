@@ -152,15 +152,17 @@ public class FuocoCore implements Core {
         return (9 - max) / 9.0;
     }
 
-    private void brakeSpace(Action action, SensorModel sensors) {
-        double space = 0.000851898 * Math.pow(sensors.getSpeed(), 2)
-                + 0.104532 * sensors.getSpeed()
-                - 2.03841;
+    private void brakeSpace(Action action, SensorModel sensors, double speed) {
+        if (sensors.getSpeed() > speed) {
+            double space = 0.000851898 * Math.pow(sensors.getSpeed(), 2)
+                    + 0.104532 * sensors.getSpeed()
+                    - 2.03841;
 
-        if (sensors.getTrackEdgeSensors()[9] < space + space_offset) {
-            action.accelerate = 0;
-            action.brake *= brake_force;
-            action.steering = action.steering * 0.8 + 0.2 * maxTrackEdgeSteering(sensors);
+            if (sensors.getTrackEdgeSensors()[9] < space + space_offset) {
+                action.accelerate = 0;
+                action.brake *= brake_force;
+                action.steering = action.steering * 0.8 + 0.2 * maxTrackEdgeSteering(sensors);
+            }
         }
     }
 
@@ -238,12 +240,6 @@ public class FuocoCore implements Core {
                 action.steering *= 2; //= maxTrackEdgeSteering(sensors);
             }
         }
-//        if (front) {
-//            action.accelerate -= 0.5;
-//        }
-//        if (behind) {
-//            action.accelerate += 0.2;
-//        }
     }
 
     private void speedLim(Action action, SensorModel sensors, double speed) {
@@ -324,9 +320,9 @@ public class FuocoCore implements Core {
     private void superSafe(Action action, SensorModel sensors) {
         action.accelerate *= 0.7;
         action.brake *= 1.5;
-        action.gear = 1;
-        if (sensors.getZSpeed() > 5) {
-            action.accelerate = 0.1;
+
+        if (sensors.getZSpeed() > 10) {
+            action.accelerate *= 0.2;
         }
     }
 
@@ -335,17 +331,11 @@ public class FuocoCore implements Core {
         meanSteering(action);
         minAccelBrake(action);
         noStuck(action, sensors, 5);
-        brakeSpace(action, sensors);
-        speedLim(action, sensors, 65);
+        brakeSpace(action, sensors, 5);
+        speedLim(action, sensors, 130);
+        automatedGearbox(action, sensors);
         superSafe(action,sensors);
         recover(action, sensors);
-
-//        if (Math.abs(action.steering) > 0.2 && Math.abs(sensors.getLateralSpeed()) > 10) {
-//            action.accelerate = 0;
-//            action.brake *= 1.2;
-////            action.steering *= -1;
-////            action.brake = 0;
-//        }
 
         return action;
     }
