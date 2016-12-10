@@ -175,9 +175,8 @@ public class FuocoCore implements Core {
     }
 
     private void pushAccel(Action action, SensorModel sensors, double distance) {
-        if (sensors.getTrackEdgeSensors()[9] > distance / 200.0) {
+        if (sensors.getTrackEdgeSensors()[9] > distance && action.brake != 0) {
             action.accelerate = 1.0;
-            action.brake = 0.0;
         }
     }
 
@@ -218,27 +217,12 @@ public class FuocoCore implements Core {
     private void opponentsCare(Action action, SensorModel sensors) {
         boolean behind = close(sensors, this.behind, 5);
         boolean left = close(sensors, this.left, 5);
-        boolean front = close(sensors, this.front, 5);
+        boolean front = close(sensors, this.front, 10);
         boolean right = close(sensors, this.right, 5);
 
-        if (front && sensors.getSpeed() > 5) {
+        if (front && sensors.getSpeed() > 20) {
             action.accelerate = 0;
             action.brake += 0.1;
-        }
-
-        if (left) {
-            if (action.steering > 0.1) {
-                action.accelerate = 1.0;
-                action.brake = 0;
-                action.steering *= 2; //= maxTrackEdgeSteering(sensors);
-            }
-        }
-        if (right) {
-            if (action.steering < 0.1) {
-                action.accelerate = 1.0;
-                action.brake = 0;
-                action.steering *= 2; //= maxTrackEdgeSteering(sensors);
-            }
         }
     }
 
@@ -329,11 +313,13 @@ public class FuocoCore implements Core {
     public Action computeAction(Action action, SensorModel sensors) {
         retrievePredictions(sensors);
         meanSteering(action);
-        minAccelBrake(action);
-        noStuck(action, sensors, 5);
-        brakeSpace(action, sensors, 5);
-        speedLim(action, sensors, 130);
-        superSafe(action,sensors);
+        speedwaysSteeringHelp(action, sensors);
+
+        accelBrake(action);
+        noStuck(action, sensors, 20);
+        brakeSpace(action, sensors, 20);
+
+        opponentsCare(action, sensors);
 
         return action;
     }
