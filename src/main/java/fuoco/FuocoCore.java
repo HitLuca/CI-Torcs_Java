@@ -131,29 +131,78 @@ public class FuocoCore implements Core {
         }
     }
 
-    private void accelBrakeHelp(Action action, SensorModel sensors) {
+    private double maxTrackEdgeSteering(SensorModel sensors) {
         int max = 0;
         for(int i = 0; i < 19; i++) {
             if (sensors.getTrackEdgeSensors()[i] > sensors.getTrackEdgeSensors()[max]) {
                 max = i;
             }
         }
+        return (9 - max) / 9.0;
+    }
+
+    private void accelBrakeHelp(Action action, SensorModel sensors) {
+
 
         if (sensors.getSpeed() < 20) {
             action.accelerate = 1.0;
             action.brake = 0.0;
-            action.steering = action.steering * 0.8 + 0.2 * (9 - max) / 9.0;
+            action.steering = action.steering * 0.8 + 0.2 * maxTrackEdgeSteering(sensors);
         } else {
             double space = 0.000851898 * Math.pow(sensors.getSpeed(), 2) + 0.104532 * sensors.getSpeed() - 2.03841;
 
             if (sensors.getTrackEdgeSensors()[9] < space + space_offset) {
                 action.accelerate = 0;
                 action.brake *= brake_force;
-                action.steering = action.steering * 0.8 + 0.2 * (9 - max) / 9.0;
+                action.steering = action.steering * 0.8 + 0.2 * maxTrackEdgeSteering(sensors);
             } else if (sensors.getTrackEdgeSensors()[9] > 0.3) {
                 action.accelerate = 1.0;
                 action.brake = 0.0;
             }
+        }
+    }
+
+    private int[] behind = new int[]{2, 1, 0, 35, 34};
+    private int[] left = new int[]{7, 8, 9, 10, 11};
+    private int[] front = new int[]{16, 17, 18, 19, 20};
+    private int[] right = new int[]{25, 26, 27, 28, 29};
+
+    private boolean close(int[] dir, double threshold) {
+        for(int i = 0; i < dir.length; i++) {
+            if (dir[i] < threshold) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void opponentsCare(Action action, SensorModel sensors) {
+        boolean behind = close(this.behind, 5);
+        boolean left = close(this.left, 5);
+        boolean front = close(this.front, 5);
+        boolean right = close(this.right, 5);
+
+        if (left) {
+            if (action.steering > 0.1) {
+                action.accelerate = 1.0;
+                action.brake = 0;
+                action.steering = maxTrackEdgeSteering(sensors);
+                Logger.println("left");
+            }
+        }
+        if (right) {
+            if (action.steering < 0.1) {
+                action.accelerate = 1.0;
+                action.brake = 0;
+                action.steering = maxTrackEdgeSteering(sensors);
+                Logger.println("left");
+            }
+        }
+        if (front) {
+            action.accelerate -= 0.5;
+        }
+        if (behind) {
+            action.accelerate += 0.2;
         }
     }
 
@@ -164,15 +213,15 @@ public class FuocoCore implements Core {
     }
 
     private void recover(Action action, SensorModel sensors) {
-        if(sensors.getSpeed() < 5.0D && sensors.getDistanceFromStartLine() > 0.0D) {
+        if(sensors.getSpeed() < 5.0 && sensors.getDistanceFromStartLine() > 0.0) {
             ++this.stuckstill;
         }
 
-        if(Math.abs(sensors.getAngleToTrackAxis()) > 0.5235987901687622D) {
-            if(this.stuck > 0 || Math.abs(sensors.getTrackPosition()) > 0.85D) {
+        if(Math.abs(sensors.getAngleToTrackAxis()) > 0.5235987901687622) {
+            if(this.stuck > 0 || Math.abs(sensors.getTrackPosition()) > 0.85) {
                 ++this.stuck;
             }
-        } else if(this.stuck > 0 && Math.abs(sensors.getAngleToTrackAxis()) < 0.3D) {
+        } else if(this.stuck > 0 && Math.abs(sensors.getAngleToTrackAxis()) < 0.3) {
             this.stuck = 0;
             this.stuckstill = 0;
         }
@@ -182,25 +231,26 @@ public class FuocoCore implements Core {
         }
 
         if(this.stuck > 25) {
-            action.accelerate = 0.7D;
-            action.brake = 0.0D;
+            action.accelerate = 1.0;
+            action.brake = 0.0;
             action.gear = -1;
-            action.steering = -1.0D;
-            if(sensors.getAngleToTrackAxis() < 0.0D) {
-                action.steering = 1.0D;
+            action.steering = -1.0;
+            if(sensors.getAngleToTrackAxis() < 0.0) {
+                action.steering = 1.0;
             }
 
-            if(sensors.getTrackEdgeSensors()[9] > 3.0D || sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0.0D) {
+            if(sensors.getTrackEdgeSensors()[9] > 8.0) { // || sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0.0D) {
                 action.gear = 1;
-                if(sensors.getSpeed() < -0.2D) {
-                    action.brake = 1.0D;
-                    action.accelerate = 0.0D;
+                if(sensors.getSpeed() < -0.2) {
+                    action.brake = 1.0;
+                    action.accelerate = 0.0;
                 }
             }
 
-            if(sensors.getSpeed() > 0.0D) {
+            if(sensors.getSpeed() > 0.0) {
                 action.steering = -action.steering;
             }
+
         }
     }
 
@@ -211,8 +261,8 @@ public class FuocoCore implements Core {
         safeAccelBrake(action);
         speedwaysSteeringHelp(action, sensors);
         accelBrakeHelp(action, sensors);
-
-//        speedLim(action, sensors, 50);
+//        opponentsCare(action, sensors);
+        speedLim(action, sensors, 50);
 
         automatedGearbox(action, sensors);
         recover(action, sensors);

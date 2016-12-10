@@ -167,6 +167,7 @@ public class FuocoDriverAlgorithm implements Serializable {
 
                 Logger.println(t);
                 Logger.println(time / laps);
+                Logger.println(result[i].res.isFinished());
                 Logger.println(damage + "\n");
 
                 if (!damage) {
