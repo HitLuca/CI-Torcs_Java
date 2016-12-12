@@ -17,14 +17,15 @@ public class test {
         TorcsConfiguration.getInstance().initialize(new File("torcs.properties"));
         DriversUtils.registerMemory(FuocoDriver.class);
 
-        IGenome[] drivers = new IGenome[1];
-        for (int i = 0; i < 1; i++) {
+        int driversNumber = 4;
+        IGenome[] drivers = new IGenome[driversNumber];
+        for (int i = 0; i < driversNumber; i++) {
             drivers[i] = new FuocoCoreGenome("memory/nets", 8, 1.5201523);
         }
 
         FuocoRace race = new FuocoRace();
         race.setTrack("e-track-4", "road");
-        race.laps = 3;
+        race.laps = 5;
 
         RaceResult[] r = race.runRace(drivers, true);
     }
