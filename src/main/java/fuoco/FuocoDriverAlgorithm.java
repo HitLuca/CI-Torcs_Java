@@ -135,7 +135,7 @@ public class FuocoDriverAlgorithm implements Serializable {
         track = track.substring(1).substring(0, track.length() - 2);
 
         if (allTracks) {
-            algorithm.testAllTracks(withGUI, laps, opp, 13, 1.5201523);
+            algorithm.testAllTracks(withGUI, laps, opp, 8, 1.5201523);
         } else {
             FuocoResults[] result = algorithm.runRace(withGUI, laps, opp, track, 13, 1.5201523);
             for (int i = 0; i < opp + 1; i++) {
