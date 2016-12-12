@@ -172,7 +172,6 @@ public class FuocoCore implements Core {
         boolean infront = close(sensors, this.infront, 10);
         double abs_steering = Math.abs(action.steering);
         double alpha = 0.2;
-        System.out.println(surpassing+"  "+targetPos);
         if(infront && abs_steering < 0.2 && !surpassing){
             if(sensors.getTrackPosition()>0){
                 targetPos=sensors.getTrackPosition()-1.25;
