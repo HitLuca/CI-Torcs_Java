@@ -240,9 +240,21 @@ public class FuocoCore implements Core {
         return action;
     }
     public void loadGenome(IGenome genome) {
-        nets = ((FuocoCoreGenome) genome).getNets();
-        space_offset = ((FuocoCoreGenome) genome).getSpace_offset();
-        brake_force = ((FuocoCoreGenome) genome).getBrake_force();
+        nets = new NeuralNet[5];
+
+        String[] names = {"alpine-1.ffn", "alpine-1_speed245_actor.ffn", "corkscrew.ffn", "e-track-4_speed170_actor.ffn", "street-1.ffn"};
+
+        for (int c = 0; c < names.length; c++) {
+            InputStreamReader stream = new InputStreamReader(getClass().getResourceAsStream("/memory/nets/" + names[c]));
+            try {
+                nets[c] = new NeuralNet(stream);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+        space_offset = 8.0;
+        brake_force = 1.5201523;
         steering = new double[nets.length];
         accelBrake = new double[nets.length];
     }
