@@ -1,10 +1,11 @@
 package fuoco;
-
+import cicontest.algorithm.abstracts.DriversUtils;
 import cicontest.torcs.genome.IGenome;
 import scr.Action;
 import scr.SensorModel;
 import java.io.*;
-
+import java.security.cert.TrustAnchor;
+import java.sql.Driver;
 public class FuocoCore implements Core {
     private NeuralNet[] nets;
     private double space_offset;
@@ -12,13 +13,13 @@ public class FuocoCore implements Core {
     private Matrix input = new Matrix(new double[29][1]);
     private double[] steering;
     private double[] accelBrake;
-
-//    private int stuck = 0;
+    private boolean surpassing=false;
+    private double targetPos = 0.0;
+    //    private int stuck = 0;
 //    private int stuckstill = 0;
 //    private int[] gearUp = new int[]{9000, 8500, 8500, 8000, 8000, 0};
 //    private int[] gearDown = new int[]{0, 3500, 4000, 4000, 4500, 4500};
 //    private double lastClutch = 0;
-
     private void retrievePredictions(SensorModel sensors) {
         sensors2Matrix(sensors);
         for (int i = 0; i < nets.length; i++) {
@@ -27,7 +28,6 @@ public class FuocoCore implements Core {
             accelBrake[i] = prediction.values[1][0];
         }
     }
-
     private void sensors2Matrix(SensorModel sensors) {
         input.values[0][0] = sensors.getAngleToTrackAxis()/Math.PI;
         for (int i = 1; i < 20; i++) {
@@ -42,7 +42,6 @@ public class FuocoCore implements Core {
         }
         input.values[28][0] = sensors.getRPM()/10000.0;
     }
-
     private void meanSteering(Action action) {
         double meanSteering = 0;
         for (int i = 0; i < nets.length; i++) {
@@ -51,7 +50,6 @@ public class FuocoCore implements Core {
         meanSteering /= nets.length;
         action.steering = meanSteering;
     }
-
     private double minAccelBrake() {
         double accelBrakeMin = Double.MAX_VALUE;
         for (int i = 0; i < accelBrake.length; i++) {
@@ -61,7 +59,6 @@ public class FuocoCore implements Core {
         }
         return accelBrakeMin;
     }
-
     private double meanAccelBrake() {
         double meanAccelBrake = 0;
         for (int i = 0; i < accelBrake.length; i++) {
@@ -69,11 +66,8 @@ public class FuocoCore implements Core {
         }
         return meanAccelBrake / nets.length;
     }
-
-
     private void minAccelBrake (Action action) {
         double accelBrakeMin = minAccelBrake();
-
         if (accelBrakeMin >= 0) {
             action.accelerate = accelBrakeMin;
             action.brake = 0;
@@ -82,11 +76,9 @@ public class FuocoCore implements Core {
             action.brake = -accelBrakeMin;
         }
     }
-
     private void accelBrake(Action action) {
         double meanAccelBrake = meanAccelBrake();
         double accelBrakeMin = minAccelBrake();
-
         if (accelBrakeMin < 0) {
             double d = 0;
             for (int i = 0; i < accelBrake.length; i++) {
@@ -100,7 +92,6 @@ public class FuocoCore implements Core {
         } else {
             accelBrakeMin = meanAccelBrake;
         }
-
         if (accelBrakeMin >= 0) {
             action.accelerate = accelBrakeMin;
             action.brake = 0;
@@ -109,7 +100,6 @@ public class FuocoCore implements Core {
             action.brake = -accelBrakeMin;
         }
     }
-
     private void speedwaysSteeringHelp(Action action, SensorModel sensors) {
         if (sensors.getSpeed() > 225) {
             if (action.steering > 0) {
@@ -125,7 +115,7 @@ public class FuocoCore implements Core {
             }
         }
     }
-//
+    //
 //    private void automatedGearbox(Action action, SensorModel sensors) {
 //        int gear = sensors.getGear();
 //        double rpm = sensors.getRPM();
@@ -142,7 +132,6 @@ public class FuocoCore implements Core {
 //            }
 //        }
 //    }
-
     private double maxTrackEdgeSteering(SensorModel sensors) {
         int max = 0;
         for(int i = 0; i < 19; i++) {
@@ -152,13 +141,11 @@ public class FuocoCore implements Core {
         }
         return (9 - max) / 9.0;
     }
-
     private void brakeSpace(Action action, SensorModel sensors, double speed) {
         if (sensors.getSpeed() > speed) {
             double space = 0.000851898 * Math.pow(sensors.getSpeed(), 2)
                     + 0.104532 * sensors.getSpeed()
                     - 2.03841;
-
             if (sensors.getTrackEdgeSensors()[9] < space + space_offset) {
                 action.accelerate = 0;
                 action.brake *= brake_force;
@@ -166,7 +153,6 @@ public class FuocoCore implements Core {
             }
         }
     }
-
     private void noStuck(Action action, SensorModel sensors, double speed) {
         if (sensors.getSpeed() < speed) {
             action.accelerate = 1.0;
@@ -174,15 +160,13 @@ public class FuocoCore implements Core {
             action.steering = action.steering * 0.8 + 0.2 * maxTrackEdgeSteering(sensors);
         }
     }
-
     private void pushAccel(Action action, SensorModel sensors, double distance) {
         if (sensors.getTrackEdgeSensors()[9] > distance) {
             action.accelerate = 1.0;
             action.brake = 0;
         }
     }
-
-//    private void accelBrakeHelp(Action action, SensorModel sensors) {
+    //    private void accelBrakeHelp(Action action, SensorModel sensors) {
 //        if (sensors.getSpeed() < 20) {
 //            action.accelerate = 1.0;
 //            action.brake = 0.0;
@@ -200,13 +184,11 @@ public class FuocoCore implements Core {
 //            }
 //        }
 //    }
-
     private int[] behind = new int[]{2, 1, 0, 35, 34};
     private int[] left = new int[]{7, 8, 9, 10, 11};
-    private int[] front = new int[]{16, 17, 18, 19, 20};
+    private int[] front = new int[]{13,14,15,16, 17, 18, 19, 20,21,22,23};
+    private int[] infront = new int[]{17};
     private int[] right = new int[]{25, 26, 27, 28, 29};
-
-
     private boolean close(SensorModel sensors, int[] dir, double threshold) {
         for(int i = 0; i < dir.length; i++) {
             if (sensors.getOpponentSensors()[dir[i]] < threshold) {
@@ -215,33 +197,35 @@ public class FuocoCore implements Core {
         }
         return false;
     }
-
     private void opponentsCare(Action action, SensorModel sensors) {
         boolean behind = close(sensors, this.behind, 5);
         boolean left = close(sensors, this.left, 5);
-        boolean front = close(sensors, this.front, 30);
+        boolean front = close(sensors, this.front, 10);
         boolean right = close(sensors, this.right, 5);
-
-        if (sensors.getSpeed() > 20) {
-            if (front || behind) {
-
-                if (action.steering > 0.1) {
-                    action.steering += 0.3;
-                    action.accelerate = 1.0;
-                    action.brake = 0;
-                } else if (action.steering < -0.1)
-                {
-                    action.steering -= 0.3;
-                    action.accelerate = 1.0;
-                    action.brake = 0;
-                }
+        boolean infront = close(sensors, this.infront, 10);
+        double alpha = 0.2;
+        System.out.println(surpassing+"  "+targetPos);
+        if(infront && Math.abs(action.steering)<0.1 && !surpassing){
+            if(sensors.getTrackPosition()>0){
+                surpassing = true;
+                targetPos=sensors.getTrackPosition()-1.25;
+            } else if(sensors.getOpponentSensors()[16]>10){
+                surpassing = true;
+                targetPos=sensors.getTrackPosition()+1.25;
             }
         }
-
-
+        if(!front && !left && !right){
+            surpassing = false;
+        }
+        if(surpassing){
+            double a = alpha;
+            if(sensors.getSpeed()>100){
+                a*=2;
+            }
+            action.steering = a * action.steering + (1-a) *DriversUtils.moveTowardsTrackPosition(sensors,0.7,targetPos);
+        }
     }
-
-//    private void speedLim(Action action, SensorModel sensors, double speed) {
+    //    private void speedLim(Action action, SensorModel sensors, double speed) {
 //        if (sensors.getSpeed() > speed) {
 //            action.accelerate = 0;
 //        }
@@ -315,39 +299,31 @@ public class FuocoCore implements Core {
 //        action.clutch = clutch;
 //        lastClutch = clutch;
 //    }
-
     private void superSafe(Action action, SensorModel sensors) {
         action.accelerate *= 0.7;
         action.brake *= 1.5;
-
         if (sensors.getZSpeed() > 10) {
             action.accelerate *= 0.2;
         }
     }
-
     public Action computeAction(Action action, SensorModel sensors) {
         retrievePredictions(sensors);
         meanSteering(action);
         speedwaysSteeringHelp(action, sensors);
-
         accelBrake(action);
-        noStuck(action, sensors, 20);
-        pushAccel(action, sensors, 50);
+        noStuck(action, sensors, 40);
+        pushAccel(action, sensors, 150);
         opponentsCare(action, sensors);
         brakeSpace(action, sensors, 20);
-
         return action;
     }
-
     public void loadGenome(IGenome genome) {
         nets = ((FuocoCoreGenome) genome).getNets();
         space_offset = ((FuocoCoreGenome) genome).getSpace_offset();
         brake_force = ((FuocoCoreGenome) genome).getBrake_force();
-
         steering = new double[nets.length];
         accelBrake = new double[nets.length];
     }
-
     public IGenome getGenome() throws IOException {
         return null;
     }
