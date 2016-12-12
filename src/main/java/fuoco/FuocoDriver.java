@@ -33,13 +33,8 @@ public class FuocoDriver extends AbstractDriver {
 
     @Override
     public void loadGenome(IGenome genome) {
-        if (genome instanceof FuocoCoreGenome) {
-            core = new FuocoCore();
-            core.loadGenome(genome);
-        } else {
-            core = new DefaultCore();
-            core.loadGenome(genome);
-        }
+        this.core = new FuocoCore();
+        this.core.loadGenome(genome);
     }
 
     @Override

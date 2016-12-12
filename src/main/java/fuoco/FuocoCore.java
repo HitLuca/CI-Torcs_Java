@@ -173,7 +173,7 @@ public class FuocoCore implements Core {
         double abs_steering = Math.abs(action.steering);
         double alpha = 0.2;
         System.out.println(surpassing+"  "+targetPos);
-        if(infront && abs_steering < 0.9 && !surpassing){
+        if(infront && abs_steering < 0.2 && !surpassing){
             if(sensors.getTrackPosition()>0){
                 targetPos=sensors.getTrackPosition()-1.25;
             } else {
@@ -234,7 +234,7 @@ public class FuocoCore implements Core {
         meanSteering(action);
         speedwaysSteeringHelp(action, sensors);
         accelBrake(action);
-        noStuck(action, sensors, 40);
+        noStuck(action, sensors, 20);
         pushAccel(action, sensors, 150);
         opponentsCare(action, sensors);
         brakeSpace(action, sensors, 20);
